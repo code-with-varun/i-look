@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i-Look Screen Time & App Usage Tracker | Developed by Runit Infotech</title>
+  <meta name="description" content="Precision Windows Screen Time and Application Tracker with mandatory Start & End session timestamps, modern StayFree UI, and continuous timesheets. Developed by Runit Infotech.">
+  <link rel="icon" type="image/x-icon" href="assets/icon.ico">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-accent: #c7d2fe;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #e0e7ff;
+      --primary-gradient: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+      --accent-emerald: #10b981;
+      --accent-cyan: #06b6d4;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+      --shadow-card: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+      --shadow-lg: 0 20px 40px -15px rgba(99, 102, 241, 0.15), 0 8px 16px -4px rgba(15, 23, 42, 0.04);
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.05) 0%, transparent 45%),
+        radial-gradient(circle at 90% 25%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 50% 90%, rgba(6, 182, 212, 0.04) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    header.site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(255, 255, 255, 0.88);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 0;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .nav-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+
+    .brand-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+    }
+
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 700;
+    }
+
+    .brand-sub a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .brand-sub a:hover {
+      text-decoration: underline;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: var(--transition);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.28);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-secondary:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .btn-lg {
+      padding: 14px 28px;
+      font-size: 1.05rem;
+      border-radius: var(--radius-md);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 70px 0 50px;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 18px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1d4ed8;
+      margin-bottom: 24px;
+    }
+
+    .badge-pill a {
+      color: #1d4ed8;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .badge-pill a:hover {
+      text-decoration: underline;
+    }
+
+    .hero-title {
+      font-size: 3.4rem;
+      line-height: 1.18;
+      font-weight: 800;
+      letter-spacing: -1.4px;
+      margin-bottom: 20px;
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+      color: #0f172a;
+    }
+
+    .hero-title span.gradient {
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 820px;
+      margin: 0 auto 36px;
+      font-weight: 400;
+      line-height: 1.65;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .hero-specs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      flex-wrap: wrap;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .hero-specs span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* App Preview Mockup (Clean Light Theme) */
+    .preview-section {
+      margin-top: 45px;
+      margin-bottom: 85px;
+    }
+
+    .preview-window {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg), 0 1px 3px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-topbar {
+      height: 46px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      padding: 0 18px;
+      justify-content: space-between;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 8px;
+    }
+
+    .window-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .window-dot.red { background: #f87171; }
+    .window-dot.yellow { background: #fbbf24; }
+    .window-dot.green { background: #34d399; }
+
+    .window-title {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .preview-body {
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+      background: #ffffff;
+    }
+
+    .sidebar-mock {
+      background: #f8fafc;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .side-item {
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .side-item.active {
+      background: #ede9fe;
+      color: #6366f1;
+      font-weight: 700;
+    }
+
+    .main-mock {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .mock-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mock-date-pill {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mock-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .mock-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+
+    .mock-card-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .mock-card-val {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .mock-chart-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+
+    .mock-box {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .mock-box-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-main);
+    }
+
+    .mock-bars {
+      display: flex;
+      align-items: flex-end;
+      height: 120px;
+      gap: 12px;
+      padding-top: 10px;
+    }
+
+    .mock-bar-col {
+      flex: 1;
+      background: #e2e8f0;
+      border-radius: 6px 6px 0 0;
+      position: relative;
+    }
+
+    .mock-bar-col.hi {
+      background: var(--primary-gradient);
+    }
+
+    /* Features Grid */
+    .section-title-wrap {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 50px;
+    }
+
+    .section-tag {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .section-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 14px;
+      color: #0f172a;
+    }
+
+    .section-desc {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 85px;
+    }
+
+    .feature-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .feature-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+    }
+
+    .feature-icon.indigo { background: #e0e7ff; color: #4f46e5; }
+    .feature-icon.emerald { background: #d1fae5; color: #059669; }
+    .feature-icon.cyan { background: #cffafe; color: #0891b2; }
+    .feature-icon.amber { background: #fef3c7; color: #d97706; }
+    .feature-icon.purple { background: #f3e8ff; color: #7c3aed; }
+    .feature-icon.rose { background: #ffe4e6; color: #e11d48; }
+
+    .feature-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #0f172a;
+    }
+
+    .feature-card p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Comparison Table Section */
+    .comparison-section {
+      padding: 70px 0;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      background: #ffffff;
+    }
+
+    .comp-table-wrap {
+      overflow-x: auto;
+      margin-top: 36px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+      background: #ffffff;
+    }
+
+    .comp-table th, .comp-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .comp-table th {
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+      background: #f8fafc;
+    }
+
+    .comp-table th.highlight {
+      color: var(--primary-dark);
+      background: #e0e7ff;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .comp-table td.highlight {
+      background: #f5f3ff;
+      font-weight: 600;
+      color: #312e81;
+    }
+
+    .check { color: var(--accent-emerald); font-weight: 800; }
+    .cross { color: var(--accent-rose); font-weight: 800; }
+
+    /* Download Box */
+    .download-section {
+      padding: 85px 0;
+      text-align: center;
+    }
+
+    .download-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 60px 40px;
+      max-width: 960px;
+      margin: 0 auto;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 40px;
+      text-align: left;
+    }
+
+    .pkg-card {
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: var(--transition);
+    }
+
+    .pkg-card:hover {
+      border-color: var(--primary);
+      background: #ffffff;
+      box-shadow: var(--shadow-card);
+      transform: translateY(-3px);
+    }
+
+    .pkg-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      align-self: flex-start;
+    }
+
+    .pkg-badge.setup { background: #e0e7ff; color: #4338ca; }
+    .pkg-badge.portable { background: #d1fae5; color: #065f46; }
+
+    .pkg-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+
+    .pkg-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .pkg-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* Footer */
+    footer.site-footer {
+      background: #ffffff;
+      border-top: 1px solid var(--border-color);
+      padding: 60px 0 30px;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    .footer-brand h4 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 12px;
+    }
+
+    .footer-brand a.company-link {
+      color: var(--primary);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .footer-brand a.company-link:hover {
+      text-decoration: underline;
+    }
+
+    .footer-col h5 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 16px;
+    }
+
+    .footer-col ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-col a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .footer-col a:hover {
+      color: var(--primary);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border-color);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .hero-title { font-size: 2.7rem; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .preview-body { grid-template-columns: 1fr; }
+      .sidebar-mock { display: none; }
+      .mock-cards { grid-template-columns: repeat(2, 1fr); }
+      .mock-chart-row { grid-template-columns: 1fr; }
+      .download-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .hero-title { font-size: 2.1rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero-ctas { flex-direction: column; width: 100%; }
+      .hero-ctas .btn { width: 100%; }
+      .mock-cards { grid-template-columns: 1fr; }
+      .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Site Navigation -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="https://runito.in" target="_blank" rel="noopener noreferrer" class="brand-logo">
+        <div class="brand-icon"><img src="assets/icon.png" alt="i-Look Tracker"></div>
+        <div class="brand-text">
+          <span class="brand-name">i-Look Tracker</span>
+          <span class="brand-sub">Developed by <a href="https://runito.in" target="_blank" rel="noopener noreferrer">Runit Infotech</a></span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#timestamps">Start & End Times</a></li>
+        <li><a href="#comparison">Comparison</a></li>
+        <li><a href="#installation">Setup</a></li>
+        <li><a href="#downloads">Downloads</a></li>
+      </ul>
+      <div class="nav-cta">
+        <a href="#downloads" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download v1.0.0
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge-pill">
+        <span>✨ Official Release v1.0.0</span>
+        <span style="opacity: 0.4">•</span>
+        <span>Registration: <strong>REG-ILK-2026-WIN</strong></span>
+        <span style="opacity: 0.4">•</span>
+        <span>Developed by <a href="https://runito.in" target="_blank" rel="noopener noreferrer">Runit Infotech</a></span>
+      </div>
+
+      <h1 class="hero-title">
+        The Precision Windows Screen Time Tracker with <span class="gradient">Mandatory Start & End Times</span>
+      </h1>
+
+      <p class="hero-desc">
+        Never settle for just daily totals. i-Look accurately records every discrete session with exact start and end timestamps, modern StayFree analytics, 100% offline local privacy, and silent system tray background tracking.
+      </p>
+
+      <div class="hero-ctas">
+        <a href="downloads/i-Look-Tracker-Setup-1.0.0.exe" download="i-Look-Tracker-Setup-1.0.0.exe" class="btn btn-primary btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+          Download Windows Installer (.exe)
+        </a>
+        <a href="downloads/i-Look-Tracker-Portable-v1.0.0.zip" download="i-Look-Tracker-Portable-v1.0.0.zip" class="btn btn-secondary btn-lg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          Download Portable (.zip)
+        </a>
+      </div>
+
+      <div class="hero-specs">
+        <span>🛡️ 100% Offline & Local Data</span>
+        <span>⚡ Native Win32 API Sensor</span>
+        <span>⏱️ Precise HH:MM:SS Duration</span>
+        <span>💼 Developed by <a href="https://runito.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 700; text-decoration: none;">Runit Infotech</a></span>
+      </div>
+
+      <!-- App Preview Mockup Window -->
+      <div class="preview-section">
+        <div class="preview-window">
+          <div class="preview-topbar">
+            <div class="window-dots">
+              <span class="window-dot red"></span>
+              <span class="window-dot yellow"></span>
+              <span class="window-dot green"></span>
+            </div>
+            <div class="window-title">i-Look Screen Time & Usage Tracker (StayFree Edition) — Developed by Runit Infotech</div>
+            <div style="width: 48px;"></div>
+          </div>
+          <div class="preview-body">
+            <div class="sidebar-mock">
+              <div class="side-item active">📊 Dashboard</div>
+              <div class="side-item">⏱️ Detailed Sessions</div>
+              <div class="side-item">📅 Timesheet Timeline</div>
+              <div class="side-item">🏷️ Category Rules</div>
+              <div class="side-item">⚙️ Settings</div>
+              <div style="margin-top: auto; padding: 12px; background: #ede9fe; border-radius: 8px; font-size: 0.8rem;">
+                <span style="color: #6366f1; font-weight: 700;">🟢 Tracking Active</span>
+                <p style="color: var(--text-muted); margin-top: 4px;">System Tray Silent Mode</p>
+              </div>
+            </div>
+
+            <div class="main-mock">
+              <div class="mock-header">
+                <div>
+                  <h2 style="font-size: 1.35rem; font-weight: 800; color: #0f172a;">Usage Dashboard</h2>
+                  <p style="font-size: 0.85rem; color: var(--text-dim);">Real-Time Windows Application & Web Activity Slice</p>
+                </div>
+                <div class="mock-date-pill">
+                  📅 Selected: This Month (01-11-2026 - 06-11-2026)
+                </div>
+              </div>
+
+              <div class="mock-cards">
+                <div class="mock-card">
+                  <div class="mock-card-label">Total Screen Time</div>
+                  <div class="mock-card-val" style="color: #4f46e5;">12h 54m 50s</div>
+                  <small style="color: #10b981; font-size: 0.75rem; font-weight: 600;">↗ 10.8% vs last week</small>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-label">Total Sessions</div>
+                  <div class="mock-card-val" style="color: #0284c7;">1,147</div>
+                  <small style="color: #10b981; font-size: 0.75rem; font-weight: 600;">↗ Discrete records</small>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-label">Daily Average</div>
+                  <div class="mock-card-val" style="color: #059669;">2h 09m 08s</div>
+                  <small style="color: var(--text-dim); font-size: 0.75rem;">Daily Target: 8h 00m</small>
+                </div>
+                <div class="mock-card">
+                  <div class="mock-card-label">Computer On Time</div>
+                  <div class="mock-card-val" style="color: #d97706;">7d 23h 34m</div>
+                  <small style="color: var(--text-dim); font-size: 0.75rem;">System Uptime</small>
+                </div>
+              </div>
+
+              <div class="mock-chart-row">
+                <div class="mock-box">
+                  <div class="mock-box-title">Multi-Day Activity Trend (Hourly / Daily Toggle)</div>
+                  <div class="mock-bars">
+                    <div class="mock-bar-col" style="height: 55%;" title="Sun"></div>
+                    <div class="mock-bar-col hi" style="height: 85%;" title="Mon"></div>
+                    <div class="mock-bar-col hi" style="height: 78%;" title="Tue"></div>
+                    <div class="mock-bar-col" style="height: 48%;" title="Wed"></div>
+                    <div class="mock-bar-col" style="height: 52%;" title="Thu"></div>
+                    <div class="mock-bar-col" style="height: 25%;" title="Today"></div>
+                  </div>
+                </div>
+
+                <div class="mock-box">
+                  <div class="mock-box-title">Top Applications Breakdown</div>
+                  <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+                    <div style="display: flex; justify-content: space-between;"><span>Google Chrome</span><strong>6h 31m (50%)</strong></div>
+                    <div style="display: flex; justify-content: space-between;"><span>Code Editor</span><strong>2h 37m (20%)</strong></div>
+                    <div style="display: flex; justify-content: space-between;"><span>Design Suite</span><strong>1h 15m (10%)</strong></div>
+                    <div style="display: flex; justify-content: space-between;"><span>System Tools</span><strong>34m (5%)</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="container">
+    <div class="section-title-wrap">
+      <span class="section-tag">High-Performance Architecture</span>
+      <h2 class="section-title">Engineered For Accuracy & Complete Privacy</h2>
+      <p class="section-desc">Developed by <a href="https://runito.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 700; text-decoration: none;">Runit Infotech</a>, i-Look bridges native Windows Win32 API monitoring with modern reactive visualization to deliver accurate time sheets without cloud telemetry.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon indigo">⏱️</div>
+        <h3>Mandatory Start & End Times</h3>
+        <p>Unlike standard screen time tools that only sum durations, i-Look captures the microsecond you open each application, the moment you switch away, and automatically calculates total session time.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon emerald">🔕</div>
+        <h3>System Tray Silent Mode</h3>
+        <p>Closing the window minimizes i-Look to your Windows notification tray. It tracks seamlessly in the background with near-zero CPU and RAM overhead.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon cyan">🚀</div>
+        <h3>Run on Windows Startup</h3>
+        <p>Starts automatically with Windows in background `--hidden` mode without popping up or stealing focus. Your timesheet begins tracking from the second you log in.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon amber">📅</div>
+        <h3>Interactive Date Range Slicing</h3>
+        <p>Select Today, Yesterday, Last 7 Days, Last 30 Days, or any custom date span. All charts, app rankings, and session tables update instantly.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon purple">📥</div>
+        <h3>1-Click Excel / CSV Exports</h3>
+        <p>Export your comprehensive audit trail with company metadata headers (Runit Infotech), ready for submission to employers, clients, or time sheet audits.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon rose">🔒</div>
+        <h3>100% Offline & Private</h3>
+        <p>Zero cloud servers. Zero telemetry. All sessions and configuration are stored locally under your Windows user profile (`%APPDATA%\i-look`).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Start & End Timestamps Deep Dive -->
+  <section id="timestamps" style="padding: 70px 0; background: #ffffff; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-tag">Audit-Grade Accuracy</span>
+        <h2 class="section-title">Every Session. Start Time. End Time. Duration.</h2>
+        <p class="section-desc">See the exact audit-ready schema captured by i-Look on Windows:</p>
+      </div>
+
+      <div class="comp-table-wrap">
+        <table class="comp-table" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Tool Name</th>
+              <th>Process</th>
+              <th>Window Title</th>
+              <th>Category</th>
+              <th>Start Time</th>
+              <th>End Time</th>
+              <th style="color: var(--accent-emerald);">Duration</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sess_1793855080</td>
+              <td>05-11-2026</td>
+              <td>Files and Folders</td>
+              <td>explorer</td>
+              <td>Project Workspace - File Explorer</td>
+              <td>System Tools</td>
+              <td style="color: #4f46e5; font-weight: 600;">05-11-2026 10:34:02</td>
+              <td style="color: #e11d48; font-weight: 600;">05-11-2026 10:34:04</td>
+              <td style="color: var(--accent-emerald); font-weight: 700;">00:00:02</td>
+            </tr>
+            <tr>
+              <td>sess_1793855072</td>
+              <td>05-11-2026</td>
+              <td>System Utility</td>
+              <td>uihost</td>
+              <td>System Security Notification</td>
+              <td>Not Rated</td>
+              <td style="color: #4f46e5; font-weight: 600;">05-11-2026 10:34:04</td>
+              <td style="color: #e11d48; font-weight: 600;">05-11-2026 10:34:11</td>
+              <td style="color: var(--accent-emerald); font-weight: 700;">00:00:07</td>
+            </tr>
+            <tr>
+              <td>sess_1793855066</td>
+              <td>05-11-2026</td>
+              <td>Code Editor</td>
+              <td>Code</td>
+              <td>src/components/AppDashboard.tsx</td>
+              <td>Business Tools</td>
+              <td style="color: #4f46e5; font-weight: 600;">05-11-2026 10:34:11</td>
+              <td style="color: #e11d48; font-weight: 600;">05-11-2026 10:34:17</td>
+              <td style="color: var(--accent-emerald); font-weight: 700;">00:00:06</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Section -->
+  <section id="comparison" class="comparison-section">
+    <div class="container">
+      <div class="section-title-wrap">
+        <span class="section-tag">Market Comparison</span>
+        <h2 class="section-title">How i-Look Compares</h2>
+        <p class="section-desc">Why i-Look developed by Runit Infotech is the ideal solution over expensive corporate monitoring tools and basic duration counters.</p>
+      </div>
+
+      <div class="comp-table-wrap">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Feature / Capability</th>
+              <th class="highlight">i-Look Tracker (Runit Infotech)</th>
+              <th>StayFree (Windows)</th>
+              <th>ProHance Enterprise</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Exact Start & End Session Timestamps</strong></td>
+              <td class="highlight"><span class="check">✓</span> Yes (Mandatory every session)</td>
+              <td><span class="cross">✕</span> No (Only daily duration sum)</td>
+              <td><span class="check">✓</span> Yes</td>
+            </tr>
+            <tr>
+              <td><strong>Cost & Licensing</strong></td>
+              <td class="highlight"><span class="check">✓</span> Free / Commercial Perpetual</td>
+              <td>Freemium with limitations</td>
+              <td><span class="cross">✕</span> Expensive Monthly SaaS ($$$)</td>
+            </tr>
+            <tr>
+              <td><strong>Privacy & Offline Guarantee</strong></td>
+              <td class="highlight"><span class="check">✓</span> 100% Local (Zero Cloud/Telemetry)</td>
+              <td>Cloud Account Required for Sync</td>
+              <td><span class="cross">✕</span> Intrusive Cloud Surveillance</td>
+            </tr>
+            <tr>
+              <td><strong>Modern StayFree UI & Glassmorphism</strong></td>
+              <td class="highlight"><span class="check">✓</span> Yes (Cards, Charts & Presets)</td>
+              <td><span class="check">✓</span> Yes</td>
+              <td><span class="cross">✕</span> Legacy Corporate 2010s UI</td>
+            </tr>
+            <tr>
+              <td><strong>Interactive Date Range Slicer</strong></td>
+              <td class="highlight"><span class="check">✓</span> Yes (Live dynamic metrics slice)</td>
+              <td>Basic Date Picker</td>
+              <td>Admin Reporting Only</td>
+            </tr>
+            <tr>
+              <td><strong>Portable Zero-Install Version</strong></td>
+              <td class="highlight"><span class="check">✓</span> Yes (.zip standalone included)</td>
+              <td><span class="cross">✕</span> No</td>
+              <td><span class="cross">✕</span> No (Requires IT Deployment)</td>
+            </tr>
+            <tr>
+              <td><strong>System Tray Background Monitoring</strong></td>
+              <td class="highlight"><span class="check">✓</span> Yes (With Live Session Tooltip)</td>
+              <td><span class="check">✓</span> Yes</td>
+              <td>Hidden Service Only</td>
+            </tr>
+            <tr>
+              <td><strong>Audit Excel/CSV Export with Company Headers</strong></td>
+              <td class="highlight"><span class="check">✓</span> Yes (1-Click CSV with metadata)</td>
+              <td>Limited</td>
+              <td>Complex Admin Exports</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Installation & Quickstart Section -->
+  <section id="installation" class="container" style="padding: 80px 0;">
+    <div class="section-title-wrap">
+      <span class="section-tag">Quickstart Guide</span>
+      <h2 class="section-title">Getting Started In 60 Seconds</h2>
+      <p class="section-desc">Choose between the full Windows setup installer or the standalone portable edition.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+      <div class="feature-card">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800; color: #6366f1; margin-bottom: 12px;">01</div>
+        <h3>Download The Binary</h3>
+        <p>Download either the automated Setup Installer (`.exe`) or the Portable standalone archive (`.zip`) from below.</p>
+      </div>
+
+      <div class="feature-card">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800; color: #10b981; margin-bottom: 12px;">02</div>
+        <h3>Run Or Extract</h3>
+        <p>If installing, check <strong>Run on Startup</strong>. If using portable, simply unzip to any folder and double-click <strong>i-Look Tracker.exe</strong>.</p>
+      </div>
+
+      <div class="feature-card">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 800; color: #f59e0b; margin-bottom: 12px;">03</div>
+        <h3>Track In Background</h3>
+        <p>Close the window to minimize to the System Tray. Click the tray icon anytime to view your live StayFree charts and export CSV timesheets.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download Section -->
+  <section id="downloads" class="download-section">
+    <div class="container">
+      <div class="download-card">
+        <div class="badge-pill" style="margin-bottom: 16px;">
+          <span>Official Distribution • Developed by <a href="https://runito.in" target="_blank" rel="noopener noreferrer">Runit Infotech</a></span>
+        </div>
+        <h2 style="font-size: 2.6rem; font-weight: 800; margin-bottom: 12px; color: #0f172a;">
+          Download i-Look Tracker v1.0.0
+        </h2>
+        <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 620px; margin: 0 auto;">
+          Safe, verified for Windows 10 & 11 (64-bit). No dependencies required. Registration: <strong>REG-ILK-2026-WIN</strong>.
+        </p>
+
+        <div class="download-grid">
+          <!-- Package 1: Installer -->
+          <div class="pkg-card">
+            <div>
+              <span class="pkg-badge setup">Recommended for PC</span>
+              <h3 class="pkg-title">Windows Setup Installer</h3>
+              <p class="pkg-desc">Standard NSIS installer. Automatically creates desktop shortcuts, start menu entries, and configures startup auto-launch.</p>
+              <div class="pkg-meta">
+                <span>File: i-Look-Tracker-Setup-1.0.0.exe</span>
+                <span>Size: ~83 MB</span>
+                <span>Format: NSIS Executable</span>
+              </div>
+            </div>
+            <a href="downloads/i-Look-Tracker-Setup-1.0.0.exe" download="i-Look-Tracker-Setup-1.0.0.exe" class="btn btn-primary btn-lg" style="width: 100%;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Installer (.exe)
+            </a>
+          </div>
+
+          <!-- Package 2: Portable -->
+          <div class="pkg-card">
+            <div>
+              <span class="pkg-badge portable">Zero-Install Standalone</span>
+              <h3 class="pkg-title">Portable ZIP Edition</h3>
+              <p class="pkg-desc">No administrator rights or installation required. Extract anywhere (including USB thumb drives) and run immediately.</p>
+              <div class="pkg-meta">
+                <span>File: i-Look-Tracker-Portable-v1.0.0.zip</span>
+                <span>Size: ~116 MB</span>
+                <span>Format: ZIP Archive</span>
+              </div>
+            </div>
+            <a href="downloads/i-Look-Tracker-Portable-v1.0.0.zip" download="i-Look-Tracker-Portable-v1.0.0.zip" class="btn btn-secondary btn-lg" style="width: 100%;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              Download Portable (.zip)
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h4>i-Look Screen Time & App Usage Tracker</h4>
+          <p style="margin-bottom: 14px; max-width: 440px;">
+            A premier desktop productivity & screen analytics system developed by <a href="https://runito.in" target="_blank" rel="noopener noreferrer" class="company-link">Runit Infotech</a>. Engineered with modern StayFree design and mandatory Start & End session recording.
+          </p>
+          <p style="font-size: 0.88rem; color: var(--text-muted);">
+            📍 Puducherry, Tamil Nadu, India - 605005<br>
+            ✉️ <a href="mailto:runitinfotech@gmail.com" style="color: var(--primary);">runitinfotech@gmail.com</a> • 🌐 <a href="https://runito.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 700;">https://runito.in</a>
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Quick Downloads</h5>
+          <ul>
+            <li><a href="downloads/i-Look-Tracker-Setup-1.0.0.exe" download>Windows Installer (.exe)</a></li>
+            <li><a href="downloads/i-Look-Tracker-Portable-v1.0.0.zip" download>Portable Archive (.zip)</a></li>
+            <li><a href="LICENSE.txt" target="_blank">License & Terms</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Product Info</h5>
+          <ul>
+            <li>Version: 1.0.0 Stable</li>
+            <li>Build Date: November 2026</li>
+            <li>Registration: <strong>REG-ILK-2026-WIN</strong></li>
+            <li>License: MIT / Proprietary Commercial</li>
+            <li>Developer: <a href="https://runito.in" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 700;">Runit Infotech</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          © 2026 <a href="https://runito.in" target="_blank" rel="noopener noreferrer" style="color: inherit; font-weight: 700; text-decoration: none;">Runit Infotech</a>. All rights reserved. Developed by <strong>Runit Infotech</strong>.
+        </div>
+        <div>
+          Registration: <strong>REG-ILK-2026-WIN</strong> • Built for Windows 10 & 11 (64-bit)
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

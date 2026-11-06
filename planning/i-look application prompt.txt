@@ -1,0 +1,95 @@
+i want to build a prohance like production tracker tool for windows. how to do that simple and easy
+
+
+
+currently im using stayfree app for windows and android but for me i can build only for windows now.
+
+
+
+start time end time what tool, what activity duration dashboard total productivity.
+
+
+
+simple as that. i will build this using anti gravity and i want installable exe file as final output.
+
+
+
+give me the detailed prompt 
+
+Building a lightweight, ProHance-style productivity and activity tracker for Windows is a fantastic project—especially when using an Electron or Python (PyQt/Tkinter with pywin32) stack compiled via tools like Google AntiGravity into a clean, installable .exe package.
+
+To make this simple, reliable, and focused purely on Tool Name, Start Time, End Time, Activity Duration, and Total Productivity Dashboard, the best architectural approach is Node.js/Electron combined with active-win to capture active window titles/processes, paired with SQLite for local data logging, and electron-builder to package it into an .exe.
+
+Below is a comprehensive, production-ready master prompt you can feed directly into AntiGravity to build the entire app from scratch.
+
+Master Prompt for AntiGravity
+Plaintext
+You are an expert full-stack desktop application developer. Build a lightweight, standalone Windows desktop productivity tracking application inspired by ProHance and StayFree, named "ProdPulse". The application must track active Windows applications and present a clean, modern dashboard.
+
+### Tech Stack
+- Framework: Electron (Node.js + HTML/CSS/JavaScript)
+- Window Monitoring: `active-win` (or standard Windows PowerShell / Win32 API polling via Node.js child_process if needed for absolute reliability)
+- Database: `better-sqlite3` or local JSON file storage (SQLite preferred for robust querying)
+- UI Framework: Tailwind CSS (via CDN or bundled) + Lucide Icons + Chart.js for clean analytics charts
+- Packaging: `electron-builder` configured to output a single standalone Windows Installer (.exe)
+
+---
+
+### Core Requirements & Features
+
+1. Background Activity Tracking Service:
+   - Poll the active foreground window every 2 to 5 seconds.
+   - Capture:
+     - Application / Tool Name (e.g., "Google Chrome", "Visual Studio Code", "Microsoft Excel")
+     - Window Title / Document / URL context if available
+     - Start Timestamp
+     - End Timestamp / Duration
+   - Handle idle detection: If the user is away from the keyboard/mouse for more than 3 minutes, pause tracking automatically and log status as "Idle".
+
+2. Data Storage & Local Persistence:
+   - Store session logs locally in an SQLite database (`prodpulse.db`) in the user's app data directory.
+   - Each log entry must contain: `id`, `tool_name`, `window_title`, `start_time`, `end_time`, `duration_seconds`, and `category` (Productive, Neutral, Unproductive).
+
+3. Clean User Dashboard (UI):
+   - Provide a modern, minimalist dark/light mode dashboard interface with a sidebar or top navigation.
+   - Metric Cards at the Top:
+     - Total Active Time for Today
+     - Total Sessions Count
+     - Productivity Score (%) calculated based on categorized tools.
+   - Main Logs Table / Timeline View:
+     - Columns: Tool Name, Start Time, End Time, Activity Duration (formatted as HH:MM:SS), and Category tag.
+     - Search / Filter bar by date and tool name.
+   - Charts Section:
+     - Daily breakdown pie/doughnut chart showing usage time per tool (similar to StayFree/ProHance).
+     - Hourly usage distribution bar chart.
+
+4. Categorization Rules Engine:
+   - Allow users to classify apps/tools into categories (e.g., VS Code = Productive, Chrome = Neutral, YouTube/Games = Unproductive) so the dashboard can compute an automated "Total Productivity Percentage".
+
+5. Standalone .exe Build Configuration:
+   - Provide complete `package.json` configurations with `electron-builder` set up so that running the build command outputs an installable Windows `.exe` file.
+
+---
+
+### Deliverables Required
+1. Project structure directory tree.
+2. Complete source code for `main.js` (handling window polling, idle check, database storage, and IPC listeners).
+3. Complete source code for `preload.js` and renderer scripts (`index.html`, `renderer.js`, styles).
+4. `package.json` with all dependencies and `electron-builder` configuration scripts.
+5. Step-by-step terminal instructions on how to initialize, run in development mode, and compile into the final `.exe` installer.
+How to Build & Package It Easily
+Once AntiGravity generates the project code for you, follow these simple steps in your terminal to get your .exe:
+
+Install Dependencies:
+
+Bash
+npm install
+Run in Development Mode (to test live tracking):
+
+Bash
+npm start
+Build the Installable .exe:
+
+Bash
+npm run build
+This will generate a dist folder containing your standalone Windows installer .exe file, ready to deploy or run directly on your system!

@@ -1,0 +1,121 @@
+Add-Type @'
+using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public class BulletproofSensor {
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+    [DllImport("user32.dll", SetLastError = true)] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    [DllImport("user32.dll")] public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct LASTINPUTINFO {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    private static IntPtr _lastHwnd = IntPtr.Zero;
+    private static string _lastProc = "";
+    private static string _lastTitle = "";
+    private static uint _lastPid = 0;
+
+    public static string[] GetSnapshot() {
+        IntPtr hwnd = GetForegroundWindow();
+        string title = "";
+        string procName = "";
+        uint targetPid = 0;
+        double idle = 0.0;
+
+        LASTINPUTINFO lii = new LASTINPUTINFO();
+        lii.cbSize = (uint)Marshal.SizeOf(lii);
+        if (GetLastInputInfo(ref lii)) {
+            idle = ((uint)Environment.TickCount - lii.dwTime) / 1000.0;
+        }
+
+        if (hwnd != IntPtr.Zero) {
+            StringBuilder sb = new StringBuilder(1024);
+            GetWindowText(hwnd, sb, 1024);
+            title = sb.ToString().Trim();
+
+            GetWindowThreadProcessId(hwnd, out targetPid);
+            if (targetPid != 0) {
+                try {
+                    procName = Process.GetProcessById((int)targetPid).ProcessName;
+                } catch {}
+            }
+        }
+
+        if (!string.IsNullOrEmpty(procName)) {
+            _lastHwnd = hwnd;
+            _lastProc = procName;
+            _lastTitle = title;
+            _lastPid = targetPid;
+        } else if (!string.IsNullOrEmpty(_lastProc)) {
+            hwnd = _lastHwnd;
+            procName = _lastProc;
+            title = _lastTitle;
+            targetPid = _lastPid;
+        } else {
+            procName = "Explorer";
+            title = "Desktop";
+        }
+
+        return new string[] {
+            hwnd.ToInt64().ToString(),
+            targetPid.ToString(),
+            procName,
+            title,
+            idle.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)
+        };
+    }
+}
+'@
+
+function Extract-Domain {
+    param([string]$title, [string]$proc)
+    if (-not $title) { return "" }
+    if ($title -match '(?i)YouTube') { return "youtube.com" }
+    if ($title -match '(?i)GitHub') { return "github.com" }
+    if ($title -match '(?i)Google Docs') { return "docs.google.com" }
+    if ($title -match '(?i)Google Sheets') { return "sheets.google.com" }
+    if ($title -match '(?i)ProHance') { return "prohance.io" }
+    if ($title -match '(?i)StayFree') { return "stayfreeapps.com" }
+    if ($title -match '(?i)ChatGPT') { return "chatgpt.com" }
+    if ($title -match '(?i)Stack Overflow') { return "stackoverflow.com" }
+    if ($title -match '(?i)WhatsApp') { return "whatsapp.com" }
+    if ($title -match '(?i)Gmail') { return "mail.google.com" }
+    if ($title -match '([a-zA-Z0-9-]+\.(com|org|net|io|in|app|dev|co|ai))') {
+        return $matches[1].ToLowerInvariant()
+    }
+    return ""
+}
+
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::WriteLine('{"event":"ready"}')
+
+while ($true) {
+    try {
+        $snap = [BulletproofSensor]::GetSnapshot()
+        $proc = $snap[2]
+        $title = $snap[3]
+        $domain = Extract-Domain -title $title -proc $proc
+
+        $obj = [PSCustomObject]@{
+            timestamp   = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+            hwnd        = [int64]$snap[0]
+            pid         = [int]$snap[1]
+            process     = $proc
+            title       = $title
+            url         = ""
+            domain      = $domain
+            idleSeconds = [double]$snap[4]
+        }
+        $json = $obj | ConvertTo-Json -Compress
+        [Console]::WriteLine($json)
+    } catch {
+        # ignore error
+    }
+    Start-Sleep -Milliseconds 1000
+}

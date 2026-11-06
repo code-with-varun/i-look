@@ -1,0 +1,14 @@
+{
+  "name": "i-look-workspace",
+  "version": "1.0.0",
+  "description": "Workspace root for i-Look Screen Time & App Usage Tracker (Runit Infotech)",
+  "scripts": {
+    "start": "npm start --prefix development",
+    "pack": "npm run pack --prefix development",
+    "dist": "npm run dist --prefix development",
+    "dist:win": "npm run dist:win --prefix development"
+  },
+  "author": "Runit Infotech",
+  "license": "MIT"
+}
+

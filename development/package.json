@@ -1,0 +1,103 @@
+{
+  "name": "i-look",
+  "version": "1.0.0",
+  "displayName": "i-Look Screen Time & App Usage Tracker",
+  "description": "Precision Windows screen time, application and website usage analytics tracker with mandatory Start & End session timestamps, modern StayFree UI, and continuous timesheets.",
+  "main": "src/main/main.js",
+  "author": {
+    "name": "VARUNAKSHAY S",
+    "email": "varunakshay@outlook.com",
+    "role": "Product Architect & Full-Stack Developer",
+    "organization": "Runit Infotech"
+  },
+  "company": {
+    "name": "Runit Infotech",
+    "brand": "I-Look Screentime Tracker",
+    "division": "Productivity & Desktop Systems",
+    "registrationNo": "REG-ILK-2026-WIN",
+    "website": "https://runito.in",
+    "contact": "runitinfotech@gmail.com",
+    "support": "runitinfotech@gmail.com",
+    "address": {
+      "city": "Puducherry",
+      "state": "Tamil Nadu",
+      "country": "India",
+      "postalCode": "605005"
+    }
+  },
+  "productDetails": {
+    "productName": "i-Look Tracker",
+    "edition": "Modern Desktop Edition (StayFree Inspired)",
+    "license": "Proprietary / Personal & Commercial Use",
+    "buildNumber": "2026.11.06",
+    "targetOS": "Windows 10 / 11 (64-bit)"
+  },
+  "features": [
+    "Automated background active window and tab tracking",
+    "Mandatory exact Start Time and End Time timestamps",
+    "Live session duration calculation in HH:MM:SS",
+    "Modern visual card and glassmorphism interface",
+    "Interactive Chart.js app breakdown and hourly distribution",
+    "Continuous 24-hour visual timesheet grid",
+    "Excel/CSV timesheet exports with company metadata headers",
+    "Zero-overhead system tray background monitoring",
+    "Custom rule classification engine"
+  ],
+  "scripts": {
+    "start": "node scripts/start.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "keywords": [
+    "stayfree",
+    "screentime",
+    "productivity",
+    "time-tracker",
+    "windows",
+    "app-usage",
+    "timesheet"
+  ],
+  "license": "ISC",
+  "dependencies": {
+    "chart.js": "^4.4.7"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.ilook.tracker",
+    "productName": "i-Look Tracker",
+    "forceCodeSigning": false,
+    "asar": true,
+    "asarUnpack": [
+      "src/native/**/*",
+      "src/assets/**/*"
+    ],
+    "win": {
+      "icon": "src/assets/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        "nsis",
+        "dir"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "src/assets/icon.ico",
+      "uninstallerIcon": "src/assets/icon.ico",
+      "artifactName": "i-Look-Tracker-Setup-${version}.exe"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "../release"
+    }
+  }
+}

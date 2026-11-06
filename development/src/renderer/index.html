@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i-Look - Screen Time & App Usage Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Modern StayFree Top Navigation Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-icon-wrap">
+        <span class="brand-logo-text">iL</span>
+      </div>
+      <div class="brand-titles">
+        <div class="brand-title-row">
+          <span class="brand-title">i-LOOK</span>
+          <span class="brand-badge">PRO</span>
+        </div>
+        <span class="brand-subtitle">SCREEN TIME & USAGE ANALYTICS</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs (StayFree Segmented Style) -->
+    <nav class="nav-segmented">
+      <button class="nav-segment-btn active" data-tab="tab-overview">
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="7" height="9" x="3" y="3" rx="1.5"/><rect width="7" height="5" x="14" y="3" rx="1.5"/><rect width="7" height="9" x="14" y="12" rx="1.5"/><rect width="7" height="5" x="3" y="16" rx="1.5"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-segment-btn" data-tab="tab-sessions">
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Detailed Sessions
+      </button>
+      <button class="nav-segment-btn" data-tab="tab-timeline">
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        24h Timeline
+      </button>
+      <button class="nav-segment-btn" data-tab="tab-rules">
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        App Rules
+      </button>
+      <button class="nav-segment-btn" data-tab="tab-settings">
+        <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Settings & Company
+      </button>
+    </nav>
+
+    <!-- Header Actions (StayFree Date Range Selector & Actions) -->
+    <div class="header-actions">
+      <!-- StayFree Date Range Trigger -->
+      <div class="stayfree-date-range-bar">
+        <button id="btn-prev-range" class="btn-icon-capsule" title="Previous Range">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button id="btn-open-date-picker" class="stayfree-range-btn">
+          <svg class="calendar-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span id="date-range-display-text">Today</span>
+          <svg class="chevron-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <button id="btn-next-range" class="btn-icon-capsule" title="Next Range">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button id="btn-theme-toggle" class="btn-icon-round" title="Toggle Theme">
+        <span class="theme-icon-dark">🌙</span>
+        <span class="theme-icon-light">☀️</span>
+      </button>
+
+      <!-- Export CSV -->
+      <button id="btn-export-csv" class="btn-glow-action">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        <span>Export CSV</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Live Active App Bar (StayFree Dynamic Status) -->
+  <section class="live-status-bar">
+    <div class="status-indicator-group">
+      <div class="status-pulse-badge online" id="status-pulse">
+        <span class="pulse-dot"></span>
+        <span id="status-text">Tracking Active</span>
+      </div>
+      <div class="live-activity-details">
+        <div class="live-app-badge" id="live-app-badge">
+          <span class="live-app-avatar" id="live-app-avatar">PC</span>
+          <span class="live-app-name" id="live-app-name">Initializing tracker...</span>
+        </div>
+        <span class="live-separator">•</span>
+        <span class="live-window-title truncate" id="live-window-title">Detecting foreground application</span>
+      </div>
+    </div>
+
+    <div class="status-metrics-group">
+      <div class="session-counter-pill">
+        <span class="counter-label">Current Session</span>
+        <span class="counter-value mono" id="live-session-timer">00:00:00</span>
+      </div>
+      <button id="btn-pause-tracking" class="btn-pause-toggle" title="Pause or Resume Tracking">
+        <span id="btn-pause-icon">⏸️</span>
+        <span id="btn-pause-text">Pause</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Main Viewport -->
+  <main class="main-viewport">
+
+    <!-- ==================== TAB 1: OVERVIEW (STAYFREE DASHBOARD MATCHING SCREENSHOTS) ==================== -->
+    <section id="tab-overview" class="tab-pane active">
+      <!-- Top Section: Trend Chart & Stats Summary -->
+      <div class="stayfree-dashboard-top-row">
+        <!-- Usage Time Chart (Area / Line / Bar) -->
+        <div class="trend-chart-card">
+          <div class="chart-header-row">
+            <div>
+              <div class="usage-time-title">
+                Usage Time: <strong id="trend-usage-time-val">0h 00m</strong>
+              </div>
+              <span class="trend-sub-range" id="trend-sub-range-label">Today</span>
+            </div>
+            <div class="chart-controls-group">
+              <div class="pill-segmented-toggle">
+                <button class="pill-toggle-btn active" id="btn-trend-granularity">Daily</button>
+              </div>
+              <div class="pill-segmented-toggle">
+                <button class="pill-toggle-btn active" id="btn-chart-type-toggle">Line Chart</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-trend-canvas-wrap">
+            <canvas id="chart-usage-trend"></canvas>
+          </div>
+
+          <div class="chart-footer-legend">
+            <span class="legend-chip"><span class="legend-color-dot cyan"></span> Desktop App Usage</span>
+            <span class="legend-chip"><span class="legend-color-dot purple"></span> Web Activity</span>
+          </div>
+        </div>
+
+        <!-- Total Usage Stats Cards (Matching Image 3) -->
+        <div class="stayfree-stats-column">
+          <div class="stats-glass-card">
+            <div class="stats-card-top">
+              <span class="stats-card-title">TOTAL USAGE</span>
+              <span class="stats-help-icon" title="Total active screen time in selected range">?</span>
+            </div>
+            <div class="stats-value-row">
+              <span class="stats-big-number" id="stat-total-usage">0h 00m</span>
+              <span class="stats-trend-badge green" id="stat-usage-trend">↗ 100%</span>
+            </div>
+          </div>
+
+          <div class="stats-glass-card">
+            <div class="stats-card-top">
+              <span class="stats-card-title">TOTAL SESSIONS</span>
+              <span class="stats-help-icon" title="Total number of recorded application sessions">?</span>
+            </div>
+            <div class="stats-value-row">
+              <span class="stats-big-number" id="stat-total-sessions">0</span>
+              <span class="stats-trend-badge green">↗ Active</span>
+            </div>
+          </div>
+
+          <div class="stats-glass-card">
+            <div class="stats-card-top">
+              <span class="stats-card-title">AVERAGE DAILY USAGE</span>
+              <span class="stats-help-icon" title="Average usage per day across the date range">?</span>
+            </div>
+            <div class="stats-value-row">
+              <span class="stats-big-number" id="stat-avg-daily">0h 00m</span>
+              <span class="stats-trend-badge green">Daily Avg</span>
+            </div>
+          </div>
+
+          <div class="stats-glass-card">
+            <div class="stats-card-top">
+              <span class="stats-card-title">MONITORED DAYS</span>
+              <span class="stats-help-icon" title="Number of days in the selected date range">?</span>
+            </div>
+            <div class="stats-value-row">
+              <span class="stats-big-number" id="stat-monitored-days">1 Day</span>
+              <span class="stats-trend-badge cyan">Range</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: All Apps List & Visual Donut Charts (Matching Image 3 & 4) -->
+      <div class="stayfree-dashboard-bottom-row">
+        <!-- All Devices / Top Apps Ranking List -->
+        <div class="stayfree-apps-column">
+          <div class="card-glass-header">
+            <div>
+              <h3 class="card-glass-title">All Applications & Websites</h3>
+              <p class="card-glass-sub" id="apps-list-sub-range">Usage breakdown for selected range</p>
+            </div>
+            <span class="glass-pill-tag" id="ranking-count-tag">0 Apps Tracked</span>
+          </div>
+
+          <div class="apps-ranking-list" id="apps-ranking-container">
+            <div class="empty-state-card">
+              <span class="empty-icon">📊</span>
+              <h4>No activity recorded in this date range</h4>
+              <p>Start working on your computer — i-Look will automatically record your app and site usage here.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Donut / Pie Charts Column (Matching Image 3 & 4) -->
+        <div class="stayfree-charts-column">
+          <!-- Desktop App Usage Donut -->
+          <div class="chart-glass-card">
+            <div class="card-glass-header">
+              <div>
+                <h3 class="card-glass-title">Desktop App Usage</h3>
+                <p class="card-glass-sub">Top applications slice distribution</p>
+              </div>
+              <span class="glass-pill-tag">Apps Share</span>
+            </div>
+            <div class="chart-canvas-wrapper donut-wrap">
+              <canvas id="chart-apps-donut"></canvas>
+            </div>
+          </div>
+
+          <!-- Category Usage Donut -->
+          <div class="chart-glass-card">
+            <div class="card-glass-header">
+              <div>
+                <h3 class="card-glass-title">Category Usage</h3>
+                <p class="card-glass-sub">Time allocation across categories</p>
+              </div>
+              <span class="glass-pill-tag">Categories</span>
+            </div>
+            <div class="chart-canvas-wrapper donut-wrap">
+              <canvas id="chart-categories-donut"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: DETAILED SESSIONS (MANDATORY REQUIREMENT) ==================== -->
+    <section id="tab-sessions" class="tab-pane">
+      <div class="pane-header-group">
+        <div>
+          <h2 class="pane-main-title">Detailed Activity Sessions</h2>
+          <p class="pane-main-sub">Complete session log with exact Start Time, End Time, and computed Duration</p>
+        </div>
+        <div class="pane-header-actions">
+          <span class="record-badge" id="sessions-counter-badge">Showing 0 sessions</span>
+          <button id="btn-export-sessions-table" class="btn-glow-action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <span>Export to CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Controls Bar -->
+      <div class="filters-glass-bar">
+        <div class="search-field-wrap">
+          <svg class="search-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+          <input type="text" id="session-search-input" placeholder="Search by tool name, process, window title, or URL..." class="search-glass-input">
+        </div>
+        <select id="session-category-select" class="select-glass">
+          <option value="">All Categories</option>
+          <option value="Business Tools">Business Tools</option>
+          <option value="Documentation Tools">Documentation Tools</option>
+          <option value="Communication Tools">Communication Tools</option>
+          <option value="Internet Browsing">Internet Browsing</option>
+          <option value="System Tools">System Tools</option>
+          <option value="Idle Time">Idle Time</option>
+        </select>
+        <select id="session-type-select" class="select-glass">
+          <option value="">All Activity Types</option>
+          <option value="TOS">Time On System (TOS)</option>
+          <option value="IDLE">System Idle (IDLE)</option>
+        </select>
+      </div>
+
+      <!-- Sessions Glass Table (Matching User's Exact Report Header) -->
+      <div class="table-glass-wrapper table-horizontal-scroll">
+        <table class="modern-data-table" id="sessions-table">
+          <thead>
+            <tr>
+              <th style="width: 45px;">#</th>
+              <th style="width: 140px;">ID</th>
+              <th style="width: 95px;">Date</th>
+              <th style="width: 140px;">Tool Name</th>
+              <th style="width: 110px;">Process</th>
+              <th>Window Title</th>
+              <th style="width: 140px;">URL / Domain</th>
+              <th style="width: 120px;">Category</th>
+              <th style="width: 90px;">Impact</th>
+              <th style="width: 60px;">Type</th>
+              <th style="width: 135px;" class="th-timestamp start">Start Time</th>
+              <th style="width: 135px;" class="th-timestamp end">End Time</th>
+              <th style="width: 75px;" class="th-timestamp duration">Duration (Sec)</th>
+              <th style="width: 95px;" class="th-timestamp duration">Duration (HH:MM:SS)</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-tbody">
+            <tr>
+              <td colspan="14" class="table-empty-row">
+                <div class="empty-state-card">
+                  <span class="empty-icon">⏱️</span>
+                  <h4>No sessions recorded for this date range</h4>
+                  <p>When you switch windows or browse sites, your session start, end, and duration appear here live.</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: 24-HOUR TIMELINE ==================== -->
+    <section id="tab-timeline" class="tab-pane">
+      <div class="pane-header-group">
+        <div>
+          <h2 class="pane-main-title">24-Hour Continuous Timeline</h2>
+          <p class="pane-main-sub">Visual ribbons showing exact usage blocks throughout the day</p>
+        </div>
+        <div class="timeline-legend-group">
+          <div class="legend-pill"><span class="legend-dot tos"></span> Active Usage (TOS)</div>
+          <div class="legend-pill"><span class="legend-dot idle"></span> Inactive / Idle</div>
+        </div>
+      </div>
+
+      <div class="timeline-card-wrapper" id="timeline-hours-container">
+        <!-- 24 hourly rows generated dynamically -->
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: APP RULES ==================== -->
+    <section id="tab-rules" class="tab-pane">
+      <div class="pane-header-group">
+        <div>
+          <h2 class="pane-main-title">App & Website Categorization Rules</h2>
+          <p class="pane-main-sub">Map executable process names and website domains to custom categories and productivity ratings</p>
+        </div>
+        <button id="btn-add-rule-modal" class="btn-glow-action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+          <span>Add Custom Rule</span>
+        </button>
+      </div>
+
+      <div class="table-glass-wrapper">
+        <table class="modern-data-table">
+          <thead>
+            <tr>
+              <th>Pattern / Keyword</th>
+              <th>Match Type</th>
+              <th>Display Tool Name</th>
+              <th>Category</th>
+              <th>Productivity Impact</th>
+              <th>Rating</th>
+              <th style="width: 100px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rules-tbody">
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: SETTINGS & COMPANY ==================== -->
+    <section id="tab-settings" class="tab-pane">
+      <div class="settings-grid">
+        <!-- Card 1: User Profile -->
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-icon-badge cyan">👤</div>
+            <div>
+              <h3 class="settings-card-title">User Profile</h3>
+              <p class="settings-card-sub">Your personal identity for activity logging</p>
+            </div>
+          </div>
+          <div class="form-vertical-flow">
+            <div class="form-field">
+              <label>Full Name</label>
+              <input type="text" id="setting-user-name" class="input-glass" value="VARUNAKSHAY S">
+            </div>
+            <div class="form-field">
+              <label>Work Email</label>
+              <input type="email" id="setting-user-email" class="input-glass" value="varunakshay@outlook.com">
+            </div>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label>Employee / User ID</label>
+                <input type="text" id="setting-employee-id" class="input-glass" value="ILK-2026-01">
+              </div>
+              <div class="form-field">
+                <label>Designation / Role</label>
+                <input type="text" id="setting-designation" class="input-glass" value="Lead Software Architect">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Company Details -->
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-icon-badge purple">🏢</div>
+            <div>
+              <h3 class="settings-card-title">Company & Organization</h3>
+              <p class="settings-card-sub">Synced into metadata headers for timesheet CSV exports</p>
+            </div>
+          </div>
+          <div class="form-vertical-flow">
+            <div class="form-field">
+              <label>Company / Organization Name</label>
+              <input type="text" id="setting-company-name" class="input-glass" value="Runit Infotech">
+            </div>
+            <div class="form-row-2">
+              <div class="form-field">
+                <label>Department / Division</label>
+                <input type="text" id="setting-department" class="input-glass" value="Engineering & Development">
+              </div>
+              <div class="form-field">
+                <label>Target OS</label>
+                <input type="text" id="setting-target-os" class="input-glass" value="Windows 10 / 11 (64-bit)" readonly>
+              </div>
+            </div>
+            <div class="info-pill-note">
+              💡 Company details are stored in your configuration and attached automatically when exporting timesheet CSVs.
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Screen Time Goals & Tracker Preferences -->
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-icon-badge emerald">🎯</div>
+            <div>
+              <h3 class="settings-card-title">Goals & Tracker Preferences</h3>
+              <p class="settings-card-sub">Daily screen time targets and system behaviors</p>
+            </div>
+          </div>
+          <div class="form-vertical-flow">
+            <div class="form-row-2">
+              <div class="form-field">
+                <label>Daily Screen Time Target (Hours)</label>
+                <input type="number" id="setting-daily-target" class="input-glass" step="0.5" value="8.0" min="1" max="24">
+              </div>
+              <div class="form-field">
+                <label>Idle Detection Timeout (Seconds)</label>
+                <input type="number" id="setting-idle-threshold" class="input-glass" value="180" min="30" max="1800">
+              </div>
+            </div>
+
+            <div class="checkbox-group-vertical">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="setting-minimize-tray" checked>
+                <span class="checkbox-box"></span>
+                <span class="checkbox-label">
+                  <strong>Minimize to System Tray on Close</strong>
+                  <small>Keeps tracking your screen time in the background when the main window is closed</small>
+                </span>
+              </label>
+
+              <label class="custom-checkbox">
+                <input type="checkbox" id="setting-launch-startup" checked>
+                <span class="checkbox-box"></span>
+                <span class="checkbox-label">
+                  <strong>Launch with Windows Startup</strong>
+                  <small>Automatically start tracking when you log in to your computer</small>
+                </span>
+              </label>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <button id="btn-save-settings" class="btn-glow-action">Save All Preferences</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: About i-Look Tracker (From package.json metadata) -->
+        <div class="settings-glass-card">
+          <div class="settings-card-header">
+            <div class="settings-icon-badge amber">ℹ️</div>
+            <div>
+              <h3 class="settings-card-title">About i-Look Tracker</h3>
+              <p class="settings-card-sub">Package metadata & software specifications</p>
+            </div>
+          </div>
+          <div class="about-metadata-list" id="about-metadata-container">
+            <div class="meta-row"><span class="meta-label">Application:</span><strong class="meta-val" id="about-app-name">i-Look Tracker</strong></div>
+            <div class="meta-row"><span class="meta-label">Version:</span><strong class="meta-val" id="about-version">1.0.0</strong></div>
+            <div class="meta-row"><span class="meta-label">Author:</span><strong class="meta-val" id="about-author">VARUNAKSHAY S</strong></div>
+            <div class="meta-row"><span class="meta-label">Company:</span><strong class="meta-val" id="about-company">Runit Infotech</strong></div>
+            <div class="meta-row"><span class="meta-label">Website:</span><strong class="meta-val" id="about-website">https://runito.in</strong></div>
+            <div class="meta-row"><span class="meta-label">Support:</span><strong class="meta-val" id="about-support">runitinfotech@gmail.com</strong></div>
+            <div class="meta-row"><span class="meta-label">Platform:</span><strong class="meta-val">Windows Native (Win32 Hook Engine)</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== STAYFREE DATE RANGE POPOVER (MATCHING SCREENSHOT 2) ==================== -->
+  <div id="popover-date-range" class="date-range-popover-backdrop">
+    <div class="date-range-popover-card">
+      <div class="popover-body-grid">
+        <!-- Left Quick Presets -->
+        <div class="popover-presets-col">
+          <span class="presets-header-title">Select date range</span>
+          <button class="preset-btn active" data-preset="today">Today</button>
+          <button class="preset-btn" data-preset="yesterday">Yesterday</button>
+          <button class="preset-btn" data-preset="last7">Last 7 days</button>
+          <button class="preset-btn" data-preset="last30">Last 30 days</button>
+          <button class="preset-btn" data-preset="thisMonth">This month</button>
+        </div>
+
+        <!-- Right Interactive Calendar -->
+        <div class="popover-calendar-col">
+          <div class="calendar-header-bar">
+            <button id="cal-prev-month" class="cal-nav-btn" title="Previous Month">&lsaquo;</button>
+            <span id="cal-month-year-label">November 2026</span>
+            <button id="cal-next-month" class="cal-nav-btn" title="Next Month">&rsaquo;</button>
+          </div>
+          <div class="calendar-weekdays-row">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="calendar-days-grid" id="calendar-days-grid">
+            <!-- Populated dynamically with range selection highlights -->
+          </div>
+          <div class="calendar-note-text">Date ranges are limited to 90 days.</div>
+        </div>
+      </div>
+
+      <!-- Bottom Action Bar -->
+      <div class="popover-footer-bar">
+        <span class="selected-range-label" id="popover-range-summary">01-11-2026 - 06-11-2026</span>
+        <div class="popover-footer-actions">
+          <button id="btn-cancel-range" class="btn-range-cancel">Cancel</button>
+          <button id="btn-apply-range" class="btn-range-done">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CUSTOM RULE -->
+  <div id="modal-rule" class="modal-backdrop">
+    <div class="modal-glass-box">
+      <div class="modal-glass-header">
+        <div class="modal-header-icon">🏷️</div>
+        <div>
+          <h3 class="modal-title">Add Categorization Rule</h3>
+          <p class="modal-sub">Define how an application or website is classified</p>
+        </div>
+        <button class="modal-close-btn" id="modal-rule-close">&times;</button>
+      </div>
+      <div class="modal-glass-body">
+        <div class="form-field">
+          <label>Executable Name or Domain Keyword</label>
+          <input type="text" id="rule-pattern" class="input-glass" placeholder="e.g. Code, chrome, figma.com, github.com">
+        </div>
+        <div class="form-field">
+          <label>Match Type</label>
+          <select id="rule-type" class="select-glass">
+            <option value="any">Process, Title, or URL</option>
+            <option value="process">Executable / Process Name Only</option>
+            <option value="domain">Domain / Website URL Only</option>
+            <option value="title">Window Title Only</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Friendly Tool Name</label>
+          <input type="text" id="rule-tool" class="input-glass" placeholder="e.g. Visual Studio Code, GitHub, Figma">
+        </div>
+        <div class="form-row-2">
+          <div class="form-field">
+            <label>Category</label>
+            <select id="rule-category" class="select-glass">
+              <option value="Business Tools">Business Tools</option>
+              <option value="Documentation Tools">Documentation Tools</option>
+              <option value="Communication Tools">Communication Tools</option>
+              <option value="Internet Browsing">Internet Browsing</option>
+              <option value="System Tools">System Tools</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Productivity Impact</label>
+            <select id="rule-impact" class="select-glass">
+              <option value="Productive">Productive (+2 Rating)</option>
+              <option value="No Impact">Neutral (0 Rating)</option>
+              <option value="Non Productive">Distracting (-2 Rating)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-glass-footer">
+        <button class="btn-glass-secondary" id="modal-rule-cancel">Cancel</button>
+        <button class="btn-glow-action" id="modal-rule-save">Save Rule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="libs/chart.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
