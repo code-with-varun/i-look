@@ -23,7 +23,10 @@ function createWindow() {
   watcher = new WatcherService(db, categorizer);
 
   const iconPath = path.join(__dirname, '..', 'assets', 'icon.png');
-  const startHidden = process.argv.includes('--hidden') || process.argv.includes('--minimized');
+  const os = require('os');
+  const hasHiddenFlag = process.argv.some(arg => /--hidden|--minimized|-hidden|-minimized/i.test(arg));
+  const isSystemBoot = os.uptime() < 360; // System booted within last 6 minutes
+  const startHidden = hasHiddenFlag || (db.settings.startMinimizedToTray !== false && isSystemBoot);
 
   mainWindow = new BrowserWindow({
     width: 1366,
@@ -50,8 +53,9 @@ function createWindow() {
     });
   }
 
-  // Apply Windows startup item configuration
+  // Apply Windows startup item configuration & ensure startup shortcuts are minimized
   applyStartupSetting(db.settings.launchOnStartup);
+  ensureStartupShortcutHidden();
 
   // Start activity watcher
   watcher.start();
@@ -96,6 +100,34 @@ function applyStartupSetting(enabled) {
     console.log(`[i-Look] Startup registration updated: openAtLogin = ${enabled !== false}`);
   } catch (err) {
     console.warn('[i-Look] Failed to set login item settings:', err.message);
+  }
+}
+
+function ensureStartupShortcutHidden() {
+  if (process.platform !== 'win32') return false;
+  try {
+    const startupFolder = app.getPath('startup');
+    const { exec } = require('child_process');
+    const ps = `
+      $wsh = New-Object -ComObject WScript.Shell
+      Get-ChildItem -Path '${startupFolder.replace(/'/g, "''")}' -Filter "*.lnk" | ForEach-Object {
+        $sc = $wsh.CreateShortcut($_.FullName)
+        if ($sc.TargetPath -match "i-Look") {
+          if ($sc.Arguments -notmatch "--hidden") {
+            $sc.Arguments = "--hidden"
+            $sc.Save()
+            Write-Host "Auto-patched $($_.Name) with --hidden"
+          }
+        }
+      }
+    `;
+    exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "${ps.replace(/\r?\n/g, ' ')}"`, (err) => {
+      if (err) console.warn('[i-Look] Startup shortcut auto-patch notice:', err.message);
+    });
+    return true;
+  } catch (e) {
+    console.warn('[i-Look] Could not patch startup shortcut:', e);
+    return false;
   }
 }
 
@@ -263,6 +295,22 @@ function registerIpcHandlers() {
     const saved = db.saveRules(rules);
     categorizer.setCustomRules(saved);
     return saved;
+  });
+
+  ipcMain.handle('get-distinct-apps', () => {
+    return db.getDistinctApps();
+  });
+
+  ipcMain.handle('save-app-classification', (event, payload) => {
+    const result = db.saveAppClassification(payload);
+    if (categorizer) {
+      categorizer.setCustomRules(db.rules);
+    }
+    return result;
+  });
+
+  ipcMain.handle('fix-startup-shortcut', () => {
+    return ensureStartupShortcutHidden();
   });
 
   ipcMain.handle('get-settings', () => {

@@ -15,17 +15,18 @@ class Database {
     this.sessions = [];
     this.rules = [];
     this.settings = {
-      userName: 'VARUNAKSHAY S',
-      userEmail: 'varunakshay@outlook.com',
+      userName: 'User',
+      userEmail: 'user@runito.in',
       companyName: 'Runit Infotech',
       department: 'Engineering & Development',
-      designation: 'Lead Software Architect',
+      designation: 'Specialist',
       employeeId: 'ILK-2026-01',
       dailyTargetHours: 8.0,
       idleThresholdSeconds: 180, // 3 minutes
       theme: 'dark', // StayFree modern dark by default
       minimizeToTray: true,
-      launchOnStartup: true
+      launchOnStartup: true,
+      startMinimizedToTray: true
     };
 
     this.init();
@@ -197,6 +198,161 @@ class Database {
     } catch (err) {
       console.error('Error rewriting sessions file:', err);
     }
+  }
+
+  /**
+   * Returns a distinct list of all tools and process names recorded in sessions
+   * with current classifications, usage metrics, and custom rule status.
+   */
+  getDistinctApps() {
+    const map = new Map();
+
+    // 1. Collect distinct processes and tool names from sessions
+    for (const s of this.sessions) {
+      if (!s.process_name && !s.tool_name) continue;
+      const proc = (s.process_name || '').trim();
+      const tool = (s.tool_name || '').trim();
+      const key = (proc || tool).toLowerCase();
+      if (!key) continue;
+
+      if (!map.has(key)) {
+        map.set(key, {
+          process: proc || tool,
+          tool: tool || proc,
+          category: s.category || 'Not Rated',
+          impact: s.impact || 'UNKNOWN',
+          rating: s.rating !== undefined ? s.rating : 0,
+          sessionCount: 0,
+          totalDurationSeconds: 0,
+          isCustomRule: false,
+          ruleId: null
+        });
+      }
+      const item = map.get(key);
+      item.sessionCount += 1;
+      item.totalDurationSeconds += (s.duration_seconds || 0);
+
+      // Prefer a clean tool name if current one is just the raw process
+      if (tool && tool.toLowerCase() !== proc.toLowerCase() && (!item.tool || item.tool.toLowerCase() === proc.toLowerCase())) {
+        item.tool = tool;
+      }
+      // Reflect latest rated category if item is currently Not Rated
+      if (s.category && s.category !== 'Not Rated' && item.category === 'Not Rated') {
+        item.category = s.category;
+        item.impact = s.impact || 'Productive';
+        item.rating = s.rating !== undefined ? s.rating : 2;
+      }
+    }
+
+    // 2. Cross-reference with custom rules
+    for (const rule of this.rules) {
+      const pat = (rule.pattern || rule.match || '').toString().toLowerCase();
+      if (!pat) continue;
+      if (map.has(pat)) {
+        const item = map.get(pat);
+        if (rule.category) item.category = rule.category;
+        if (rule.impact) item.impact = rule.impact;
+        if (rule.rating !== undefined) item.rating = rule.rating;
+        if (rule.tool) item.tool = rule.tool;
+        item.isCustomRule = true;
+        item.ruleId = rule.id;
+      } else {
+        map.set(pat, {
+          process: rule.pattern || pat,
+          tool: rule.tool || rule.pattern || pat,
+          category: rule.category || 'Business Tools',
+          impact: rule.impact || 'Productive',
+          rating: rule.rating !== undefined ? rule.rating : 2,
+          sessionCount: 0,
+          totalDurationSeconds: 0,
+          isCustomRule: true,
+          ruleId: rule.id
+        });
+      }
+    }
+
+    // Format durations and sort by total duration desc
+    const result = Array.from(map.values()).map(item => {
+      const h = Math.floor(item.totalDurationSeconds / 3600);
+      const m = Math.floor((item.totalDurationSeconds % 3600) / 60);
+      const s = item.totalDurationSeconds % 60;
+      let durationFormatted = '';
+      if (h > 0) durationFormatted = `${h}h ${m}m`;
+      else if (m > 0) durationFormatted = `${m}m ${s}s`;
+      else durationFormatted = `${s}s`;
+
+      return {
+        ...item,
+        durationFormatted
+      };
+    }).sort((a, b) => {
+      if (b.totalDurationSeconds !== a.totalDurationSeconds) {
+        return b.totalDurationSeconds - a.totalDurationSeconds;
+      }
+      return b.sessionCount - a.sessionCount;
+    });
+
+    return result;
+  }
+
+  /**
+   * Saves or updates a classification rule for an app/process,
+   * and retroactively updates historical sessions for that process/tool.
+   */
+  saveAppClassification({ process, tool, category, impact, rating }) {
+    if (!process && !tool) return { success: false, error: 'Process or tool required' };
+    const procKey = (process || tool).trim();
+    const friendlyTool = (tool || process).trim();
+    const numRating = rating !== undefined ? Number(rating) : (impact === 'Productive' ? 2 : (impact === 'Non Productive' ? -2 : 0));
+
+    // 1. Update or create rule
+    let existingRule = this.rules.find(r => (r.pattern || '').toLowerCase() === procKey.toLowerCase());
+    if (existingRule) {
+      existingRule.tool = friendlyTool;
+      existingRule.category = category;
+      existingRule.impact = impact;
+      existingRule.rating = numRating;
+    } else {
+      existingRule = {
+        id: 'rule_' + Date.now(),
+        pattern: procKey,
+        type: 'process',
+        tool: friendlyTool,
+        category: category,
+        impact: impact,
+        rating: numRating
+      };
+      this.rules.unshift(existingRule);
+    }
+    this.saveRules(this.rules);
+
+    // 2. Retroactively update all existing sessions in history matching this process or tool
+    let updatedCount = 0;
+    const pLower = procKey.toLowerCase();
+    const tLower = friendlyTool.toLowerCase();
+
+    for (const s of this.sessions) {
+      const sp = (s.process_name || '').toLowerCase();
+      const st = (s.tool_name || '').toLowerCase();
+      if (sp === pLower || st === tLower || sp === tLower || st === pLower) {
+        s.category = category;
+        s.impact = impact;
+        s.rating = numRating;
+        if (friendlyTool) s.tool_name = friendlyTool;
+        updatedCount++;
+      }
+    }
+
+    if (updatedCount > 0) {
+      this.rewriteSessions();
+    }
+
+    return {
+      success: true,
+      updatedCount,
+      rule: existingRule,
+      rules: this.rules
+    };
   }
 
   /**

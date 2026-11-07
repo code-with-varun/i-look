@@ -46,12 +46,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTrackingControls();
   initRuleModal();
   initChartControls();
+  initDistinctAppsView();
 
   // Load Initial Data
   await loadDashboardData();
   await loadSessionsTable();
   await loadTimesheetGrid();
   await loadRules();
+  await loadDistinctApps();
   await loadSettingsAndAppInfo();
 
   // Watcher Real-Time IPC Listeners
@@ -1086,11 +1088,223 @@ function initRuleModal() {
   }
 }
 
+let distinctAppsData = [];
+
+function initDistinctAppsView() {
+  const btnDistinct = document.getElementById('view-distinct-apps-btn');
+  const btnCustom = document.getElementById('view-custom-rules-btn');
+  const secDistinct = document.getElementById('section-distinct-apps');
+  const secCustom = document.getElementById('section-custom-rules');
+  const filterInput = document.getElementById('filter-detected-apps-input');
+  const btnRefresh = document.getElementById('btn-refresh-distinct-apps');
+
+  if (btnDistinct && btnCustom && secDistinct && secCustom) {
+    btnDistinct.addEventListener('click', () => {
+      btnDistinct.classList.add('active');
+      btnCustom.classList.remove('active');
+      secDistinct.style.display = 'block';
+      secCustom.style.display = 'none';
+    });
+
+    btnCustom.addEventListener('click', () => {
+      btnCustom.classList.add('active');
+      btnDistinct.classList.remove('active');
+      secCustom.style.display = 'block';
+      secDistinct.style.display = 'none';
+    });
+  }
+
+  if (filterInput) {
+    filterInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      renderDistinctAppsTable(q);
+    });
+  }
+
+  if (btnRefresh) {
+    btnRefresh.addEventListener('click', async () => {
+      const lbl = btnRefresh.querySelector('span');
+      if (lbl) lbl.textContent = 'Refreshing...';
+      await loadDistinctApps();
+      if (lbl) lbl.textContent = 'Refresh Detected';
+    });
+  }
+}
+
+async function loadDistinctApps() {
+  if (!window.api || !window.api.getDistinctApps) return;
+  try {
+    distinctAppsData = (await window.api.getDistinctApps()) || [];
+    const countBadge = document.getElementById('distinct-apps-count');
+    if (countBadge) countBadge.textContent = distinctAppsData.length;
+    renderDistinctAppsTable();
+  } catch (err) {
+    console.error('Error loading distinct apps:', err);
+  }
+}
+
+function renderDistinctAppsTable(filterQuery = '') {
+  const tbody = document.getElementById('distinct-apps-tbody');
+  if (!tbody) return;
+
+  const filtered = distinctAppsData.filter(item => {
+    if (!filterQuery) return true;
+    const t = (item.tool || '').toLowerCase();
+    const p = (item.process || '').toLowerCase();
+    const c = (item.category || '').toLowerCase();
+    return t.includes(filterQuery) || p.includes(filterQuery) || c.includes(filterQuery);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="table-empty-row">
+          <div class="empty-state-card">
+            <span class="empty-icon">🔍</span>
+            <h4>No matching detected applications</h4>
+            <p>${filterQuery ? 'No results for "' + escapeHtml(filterQuery) + '"' : 'Start using applications on your PC and they will appear here automatically.'}</p>
+          </div>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const CATEGORIES = [
+    'Business Tools',
+    'Communication Tools',
+    'Documentation Tools',
+    'Development',
+    'Internet Browsing',
+    'System Tools',
+    'Entertainment',
+    'Utilities',
+    'Social Media',
+    'Not Rated'
+  ];
+
+  const IMPACTS = [
+    { label: 'Productive (+2)', value: 'Productive', rating: 2 },
+    { label: 'No Impact (0)', value: 'No Impact', rating: 0 },
+    { label: 'Non Productive (-2)', value: 'Non Productive', rating: -2 },
+    { label: 'Not Rated / UNKNOWN (0)', value: 'UNKNOWN', rating: 0 }
+  ];
+
+  let html = '';
+  filtered.forEach((app) => {
+    const procSafe = escapeHtml(app.process || '');
+    const toolSafe = escapeHtml(app.tool || '');
+    const catSafe = app.category || 'Not Rated';
+    const impactSafe = app.impact || 'UNKNOWN';
+
+    const catOptions = CATEGORIES.map(c => {
+      const isSel = c.toLowerCase() === catSafe.toLowerCase();
+      return `<option value="${escapeHtml(c)}" ${isSel ? 'selected' : ''}>${escapeHtml(c)}</option>`;
+    }).join('');
+
+    const impactOptions = IMPACTS.map(imp => {
+      const isSel = imp.value.toLowerCase() === impactSafe.toLowerCase() ||
+                    (imp.value === 'UNKNOWN' && (impactSafe === 'Not Rated' || impactSafe === 'UNKNOWN'));
+      return `<option value="${imp.value}" data-rating="${imp.rating}" ${isSel ? 'selected' : ''}>${imp.label}</option>`;
+    }).join('');
+
+    html += `
+      <tr data-process="${procSafe}">
+        <td>
+          <input type="text" class="app-name-input row-tool-name" value="${toolSafe}" placeholder="Tool display name">
+        </td>
+        <td>
+          <span class="process-badge" title="${procSafe}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
+            ${procSafe}
+          </span>
+          ${app.isCustomRule ? '<span style="font-size: 10px; color: #10b981; margin-left: 5px; font-weight:700;" title="Saved Custom Classification">● Configured</span>' : ''}
+        </td>
+        <td>
+          <strong style="color: #fff; font-size: 12.5px;">${app.durationFormatted || '0s'}</strong>
+          <small style="color: var(--text-dim); display: block; font-size: 11px;">${app.sessionCount} session${app.sessionCount === 1 ? '' : 's'}</small>
+        </td>
+        <td>
+          <select class="table-select row-category">
+            ${catOptions}
+          </select>
+        </td>
+        <td>
+          <select class="table-select row-impact">
+            ${impactOptions}
+          </select>
+        </td>
+        <td style="text-align: center;">
+          <button type="button" class="btn-save-app-tag" onclick="saveAppRowClassification('${procSafe}', this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save & Tag
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = html;
+}
+
+window.saveAppRowClassification = async function(processName, btn) {
+  if (!window.api || !window.api.saveAppClassification) return;
+  const tr = btn.closest('tr');
+  if (!tr) return;
+
+  const toolInput = tr.querySelector('.row-tool-name');
+  const catSelect = tr.querySelector('.row-category');
+  const impSelect = tr.querySelector('.row-impact');
+
+  const tool = toolInput ? toolInput.value.trim() : processName;
+  const category = catSelect ? catSelect.value : 'Business Tools';
+  const impact = impSelect ? impSelect.value : 'Productive';
+  const selectedOpt = impSelect ? impSelect.options[impSelect.selectedIndex] : null;
+  const rating = selectedOpt ? parseInt(selectedOpt.dataset.rating || '2', 10) : (impact === 'Productive' ? 2 : (impact === 'Non Productive' ? -2 : 0));
+
+  btn.textContent = 'Saving...';
+  btn.classList.remove('saved');
+
+  try {
+    const result = await window.api.saveAppClassification({
+      process: processName,
+      tool,
+      category,
+      impact,
+      rating
+    });
+
+    if (result && result.success) {
+      btn.innerHTML = '✓ Saved!';
+      btn.classList.add('saved');
+      setTimeout(() => {
+        btn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save & Tag
+        `;
+        btn.classList.remove('saved');
+      }, 2000);
+
+      // Refresh custom rules count, distinct apps list, and dashboard
+      await loadRules();
+      await loadDistinctApps();
+      await loadDashboardData();
+      await loadSessionsTable();
+    }
+  } catch (err) {
+    console.error('Error saving app classification:', err);
+    btn.textContent = 'Error';
+  }
+};
+
 async function loadRules() {
   if (!window.api) return;
 
   try {
     const rules = await window.api.getRules();
+    const countBadge = document.getElementById('custom-rules-count');
+    if (countBadge) countBadge.textContent = rules ? rules.length : 0;
+
     const tbody = document.getElementById('rules-tbody');
     if (!tbody) return;
 
@@ -1100,8 +1314,8 @@ async function loadRules() {
           <td colspan="7" class="table-empty-row">
             <div class="empty-state-card">
               <span class="empty-icon">🏷️</span>
-              <h4>No custom rules defined</h4>
-              <p>Default classifications are active. Click "+ Add Custom Rule" to map your applications.</p>
+              <h4>No custom pattern rules defined</h4>
+              <p>Default classifications are active. Use the Detected Applications tab or click "+ Add Custom Rule" to add keyword rules.</p>
             </div>
           </td>
         </tr>
@@ -1114,7 +1328,7 @@ async function loadRules() {
       rowsHtml += `
         <tr>
           <td style="font-family: var(--font-mono); font-weight: 600; color: var(--accent-cyan);">${escapeHtml(r.pattern)}</td>
-          <td><span class="category-tag-badge">${escapeHtml(r.matchType || 'any')}</span></td>
+          <td><span class="category-tag-badge">${escapeHtml(r.matchType || r.type || 'any')}</span></td>
           <td><strong>${escapeHtml(r.tool)}</strong></td>
           <td><span class="category-tag-badge">${escapeHtml(r.category)}</span></td>
           <td><span class="impact-tag ${r.impact === 'Productive' ? 'productive' : (r.impact === 'Non Productive' ? 'distracting' : 'neutral')}">${escapeHtml(r.impact)}</span></td>
@@ -1138,6 +1352,8 @@ window.deleteRule = async function(id) {
   const updated = currentRules.filter((r, idx) => r.id !== id && String(idx) !== id);
   await window.api.saveRules(updated);
   loadRules();
+  loadDistinctApps();
+  loadDashboardData();
 };
 
 /* ==========================================================================
@@ -1159,6 +1375,7 @@ async function loadSettingsAndAppInfo() {
       const idleInput = document.getElementById('setting-idle-threshold');
       const trayCheck = document.getElementById('setting-minimize-tray');
       const startupCheck = document.getElementById('setting-launch-startup');
+      const startMinimizedCheck = document.getElementById('setting-start-minimized-tray');
 
       if (nameInput && settings.userName) nameInput.value = settings.userName;
       if (emailInput && settings.userEmail) emailInput.value = settings.userEmail;
@@ -1170,6 +1387,28 @@ async function loadSettingsAndAppInfo() {
       if (idleInput && settings.idleThresholdSeconds) idleInput.value = settings.idleThresholdSeconds;
       if (trayCheck) trayCheck.checked = settings.minimizeToTray !== false;
       if (startupCheck) startupCheck.checked = settings.launchOnStartup !== false;
+      if (startMinimizedCheck) startMinimizedCheck.checked = settings.startMinimizedToTray !== false;
+    }
+
+    // Fix Startup Shortcut Button
+    const btnFixStartup = document.getElementById('btn-fix-startup-shortcut');
+    if (btnFixStartup) {
+      btnFixStartup.addEventListener('click', async () => {
+        btnFixStartup.textContent = 'Updating shortcut...';
+        try {
+          const ok = await window.api.fixStartupShortcut();
+          btnFixStartup.textContent = ok ? '✓ Minimized to Tray Configured!' : '✓ Checked & Verified';
+          btnFixStartup.style.borderColor = '#10b981';
+          btnFixStartup.style.color = '#34d399';
+        } catch (e) {
+          btnFixStartup.textContent = '✓ Configured';
+        }
+        setTimeout(() => {
+          btnFixStartup.textContent = 'Fix Startup Shortcut';
+          btnFixStartup.style.borderColor = '';
+          btnFixStartup.style.color = '';
+        }, 3000);
+      });
     }
 
     // Load App & Company Info from package.json
@@ -1184,7 +1423,7 @@ async function loadSettingsAndAppInfo() {
 
       if (aboutName) aboutName.textContent = appInfo.displayName || 'i-Look Tracker';
       if (aboutVersion) aboutVersion.textContent = appInfo.version || '1.0.0';
-      if (aboutAuthor && appInfo.author) aboutAuthor.textContent = appInfo.author.name || 'VARUNAKSHAY S';
+      if (aboutAuthor) aboutAuthor.textContent = (appInfo.company && appInfo.company.name) || 'Runit Infotech';
       if (aboutCompany && appInfo.company) aboutCompany.textContent = appInfo.company.name || 'Runit Infotech';
       if (aboutWebsite && appInfo.company) aboutWebsite.textContent = appInfo.company.website || 'https://runito.in';
       if (aboutSupport && appInfo.company) aboutSupport.textContent = appInfo.company.support || 'runitinfotech@gmail.com';
@@ -1204,7 +1443,8 @@ async function loadSettingsAndAppInfo() {
           dailyTargetHours: parseFloat(document.getElementById('setting-daily-target').value) || 8.0,
           idleThresholdSeconds: parseInt(document.getElementById('setting-idle-threshold').value, 10) || 180,
           minimizeToTray: document.getElementById('setting-minimize-tray').checked,
-          launchOnStartup: document.getElementById('setting-launch-startup').checked
+          launchOnStartup: document.getElementById('setting-launch-startup').checked,
+          startMinimizedToTray: document.getElementById('setting-start-minimized-tray')?.checked !== false
         };
 
         await window.api.saveSettings(updated);

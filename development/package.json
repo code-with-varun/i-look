@@ -5,10 +5,10 @@
   "description": "Precision Windows screen time, application and website usage analytics tracker with mandatory Start & End session timestamps, modern StayFree UI, and continuous timesheets.",
   "main": "src/main/main.js",
   "author": {
-    "name": "VARUNAKSHAY S",
-    "email": "varunakshay@outlook.com",
-    "role": "Product Architect & Full-Stack Developer",
-    "organization": "Runit Infotech"
+    "name": "Runit Infotech",
+    "email": "runitinfotech@gmail.com",
+    "organization": "Runit Infotech",
+    "website": "https://runito.in"
   },
   "company": {
     "name": "Runit Infotech",
@@ -47,7 +47,10 @@
     "start": "node scripts/start.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "dist:win": "electron-builder --win nsis"
+    "dist:win": "electron-builder --win nsis",
+    "dist:portable": "electron-builder --win portable",
+    "dist:store": "electron-builder --win appx",
+    "dist:appx": "electron-builder --win appx"
   },
   "keywords": [
     "stayfree",
@@ -79,9 +82,20 @@
       "icon": "src/assets/icon.ico",
       "signAndEditExecutable": false,
       "target": [
-        "nsis",
-        "dir"
+        "dir",
+        "portable",
+        "nsis"
       ]
+    },
+    "portable": {
+      "artifactName": "i-Look-Tracker-Portable-${version}.exe"
+    },
+    "appx": {
+      "identityName": "RunitInfotech.iLookTracker",
+      "applicationId": "RunitInfotech.iLookTracker",
+      "publisherDisplayName": "Runit Infotech",
+      "publisher": "CN=RUNIT-INFOTECH",
+      "backgroundColor": "#090d16"
     },
     "nsis": {
       "oneClick": false,

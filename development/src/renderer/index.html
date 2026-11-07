@@ -19,7 +19,6 @@
       <div class="brand-titles">
         <div class="brand-title-row">
           <span class="brand-title">i-LOOK</span>
-          <span class="brand-badge">PRO</span>
         </div>
         <span class="brand-subtitle">SCREEN TIME & USAGE ANALYTICS</span>
       </div>
@@ -343,32 +342,77 @@
     <section id="tab-rules" class="tab-pane">
       <div class="pane-header-group">
         <div>
-          <h2 class="pane-main-title">App & Website Categorization Rules</h2>
-          <p class="pane-main-sub">Map executable process names and website domains to custom categories and productivity ratings</p>
+          <h2 class="pane-main-title">App & Website Categorization</h2>
+          <p class="pane-main-sub">Discover all recorded tools & process names, define custom categories, and assign productivity impact tags</p>
         </div>
-        <button id="btn-add-rule-modal" class="btn-glow-action">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
-          <span>Add Custom Rule</span>
-        </button>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button id="btn-refresh-distinct-apps" class="btn-subtle-action" title="Refresh Detected Apps">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Refresh Detected</span>
+          </button>
+          <button id="btn-add-rule-modal" class="btn-glow-action">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            <span>Add Custom Rule</span>
+          </button>
+        </div>
       </div>
 
-      <div class="table-glass-wrapper">
-        <table class="modern-data-table">
-          <thead>
-            <tr>
-              <th>Pattern / Keyword</th>
-              <th>Match Type</th>
-              <th>Display Tool Name</th>
-              <th>Category</th>
-              <th>Productivity Impact</th>
-              <th>Rating</th>
-              <th style="width: 100px;">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="rules-tbody">
-            <!-- Populated dynamically -->
-          </tbody>
-        </table>
+      <!-- Search & Segment Control -->
+      <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; background: rgba(15, 23, 42, 0.6); padding: 4px; border-radius: 10px; border: 1px solid var(--border-glass);">
+          <button type="button" class="rule-view-toggle active" id="view-distinct-apps-btn" style="padding: 7px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+            📋 Detected Applications & Processes (<span id="distinct-apps-count">0</span>)
+          </button>
+          <button type="button" class="rule-view-toggle" id="view-custom-rules-btn" style="padding: 7px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+            ⚡ Custom Keyword & Domain Rules (<span id="custom-rules-count">0</span>)
+          </button>
+        </div>
+        <div style="flex: 1; max-width: 420px; position: relative;">
+          <input type="text" id="filter-detected-apps-input" class="input-glass" placeholder="🔍 Search tool name or process (e.g. chrome, excel, i-look)..." style="width: 100%;">
+        </div>
+      </div>
+
+      <!-- VIEW 1: DISTINCT DETECTED APPS & PROCESSES -->
+      <div id="section-distinct-apps">
+        <div class="table-glass-wrapper">
+          <table class="modern-data-table">
+            <thead>
+              <tr>
+                <th style="min-width: 180px;">Tool Display Name</th>
+                <th style="min-width: 140px;">Process Name</th>
+                <th style="min-width: 120px;">Recorded Usage</th>
+                <th style="min-width: 190px;">Category</th>
+                <th style="min-width: 180px;">Productivity Tag / Impact</th>
+                <th style="width: 140px; text-align: center;">Quick Action</th>
+              </tr>
+            </thead>
+            <tbody id="distinct-apps-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- VIEW 2: CUSTOM KEYWORD & DOMAIN RULES -->
+      <div id="section-custom-rules" style="display: none;">
+        <div class="table-glass-wrapper">
+          <table class="modern-data-table">
+            <thead>
+              <tr>
+                <th>Pattern / Keyword</th>
+                <th>Match Type</th>
+                <th>Display Tool Name</th>
+                <th>Category</th>
+                <th>Productivity Impact</th>
+                <th>Rating</th>
+                <th style="width: 100px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rules-tbody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -387,11 +431,11 @@
           <div class="form-vertical-flow">
             <div class="form-field">
               <label>Full Name</label>
-              <input type="text" id="setting-user-name" class="input-glass" value="VARUNAKSHAY S">
+              <input type="text" id="setting-user-name" class="input-glass" placeholder="Your Full Name" value="User">
             </div>
             <div class="form-field">
               <label>Work Email</label>
-              <input type="email" id="setting-user-email" class="input-glass" value="varunakshay@outlook.com">
+              <input type="email" id="setting-user-email" class="input-glass" placeholder="user@company.com" value="user@runito.in">
             </div>
             <div class="form-row-2">
               <div class="form-field">
@@ -400,7 +444,7 @@
               </div>
               <div class="form-field">
                 <label>Designation / Role</label>
-                <input type="text" id="setting-designation" class="input-glass" value="Lead Software Architect">
+                <input type="text" id="setting-designation" class="input-glass" value="Specialist">
               </div>
             </div>
           </div>
@@ -475,9 +519,26 @@
                   <small>Automatically start tracking when you log in to your computer</small>
                 </span>
               </label>
+
+              <label class="custom-checkbox">
+                <input type="checkbox" id="setting-start-minimized-tray" checked>
+                <span class="checkbox-box"></span>
+                <span class="checkbox-label">
+                  <strong>Start Minimized to System Tray</strong>
+                  <small>When auto-starting with Windows, launch directly to the system tray without popping up</small>
+                </span>
+              </label>
             </div>
 
-            <div style="margin-top: 10px;">
+            <div style="margin-top: 14px; padding: 12px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div>
+                <strong style="font-size: 0.88rem; color: #fff;">Windows Startup Shortcut</strong>
+                <div style="font-size: 0.78rem; color: var(--text-dim);">Ensures shortcut in shell:startup passes the --hidden argument to start in tray</div>
+              </div>
+              <button type="button" id="btn-fix-startup-shortcut" class="btn-subtle-action" style="padding: 6px 14px; font-size: 0.82rem; cursor: pointer; white-space: nowrap;">Fix Startup Shortcut</button>
+            </div>
+
+            <div style="margin-top: 12px;">
               <button id="btn-save-settings" class="btn-glow-action">Save All Preferences</button>
             </div>
           </div>
@@ -495,8 +556,9 @@
           <div class="about-metadata-list" id="about-metadata-container">
             <div class="meta-row"><span class="meta-label">Application:</span><strong class="meta-val" id="about-app-name">i-Look Tracker</strong></div>
             <div class="meta-row"><span class="meta-label">Version:</span><strong class="meta-val" id="about-version">1.0.0</strong></div>
-            <div class="meta-row"><span class="meta-label">Author:</span><strong class="meta-val" id="about-author">VARUNAKSHAY S</strong></div>
+            <div class="meta-row"><span class="meta-label">Developer:</span><strong class="meta-val" id="about-author">Runit Infotech</strong></div>
             <div class="meta-row"><span class="meta-label">Company:</span><strong class="meta-val" id="about-company">Runit Infotech</strong></div>
+            <div class="meta-row"><span class="meta-label">Registration:</span><strong class="meta-val">REG-ILK-2026-WIN</strong></div>
             <div class="meta-row"><span class="meta-label">Website:</span><strong class="meta-val" id="about-website">https://runito.in</strong></div>
             <div class="meta-row"><span class="meta-label">Support:</span><strong class="meta-val" id="about-support">runitinfotech@gmail.com</strong></div>
             <div class="meta-row"><span class="meta-label">Platform:</span><strong class="meta-val">Windows Native (Win32 Hook Engine)</strong></div>
