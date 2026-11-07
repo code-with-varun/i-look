@@ -106,17 +106,29 @@ function applyStartupSetting(enabled) {
 function ensureStartupShortcutHidden() {
   if (process.platform !== 'win32') return false;
   try {
-    const startupFolder = app.getPath('startup');
+    const startupFolder = process.env.APPDATA
+      ? path.join(process.env.APPDATA, 'Microsoft', 'Windows', 'Start Menu', 'Programs', 'Startup')
+      : null;
+    if (!startupFolder || !fs.existsSync(startupFolder)) return false;
+
     const { exec } = require('child_process');
     const ps = `
       $wsh = New-Object -ComObject WScript.Shell
-      Get-ChildItem -Path '${startupFolder.replace(/'/g, "''")}' -Filter "*.lnk" | ForEach-Object {
+      Get-ChildItem -Path '${startupFolder.replace(/'/g, "''")}' -Filter "*.lnk" -ErrorAction SilentlyContinue | ForEach-Object {
         $sc = $wsh.CreateShortcut($_.FullName)
         if ($sc.TargetPath -match "i-Look") {
+          letChanged = $false
           if ($sc.Arguments -notmatch "--hidden") {
             $sc.Arguments = "--hidden"
+            letChanged = $true
+          }
+          if ($sc.WindowStyle -ne 7) {
+            $sc.WindowStyle = 7
+            letChanged = $true
+          }
+          if (letChanged) {
             $sc.Save()
-            Write-Host "Auto-patched $($_.Name) with --hidden"
+            Write-Host "Auto-patched $($_.Name) with --hidden and Minimized window style"
           }
         }
       }
