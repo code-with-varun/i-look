@@ -359,11 +359,11 @@
 
       <!-- Search & Segment Control -->
       <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-        <div style="display: flex; gap: 8px; background: rgba(15, 23, 42, 0.6); padding: 4px; border-radius: 10px; border: 1px solid var(--border-glass);">
-          <button type="button" class="rule-view-toggle active" id="view-distinct-apps-btn" style="padding: 7px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+        <div class="rule-toggle-container">
+          <button type="button" class="rule-view-toggle active" id="view-distinct-apps-btn">
             📋 Detected Applications & Processes (<span id="distinct-apps-count">0</span>)
           </button>
-          <button type="button" class="rule-view-toggle" id="view-custom-rules-btn" style="padding: 7px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.85rem; cursor: pointer;">
+          <button type="button" class="rule-view-toggle" id="view-custom-rules-btn">
             ⚡ Custom Keyword & Domain Rules (<span id="custom-rules-count">0</span>)
           </button>
         </div>
@@ -371,6 +371,37 @@
           <input type="text" id="filter-detected-apps-input" class="input-glass" placeholder="🔍 Search tool name or process (e.g. chrome, excel, i-look)..." style="width: 100%;">
         </div>
       </div>
+
+      <!-- Datalist Suggestions for Dynamic Typing & Autocomplete -->
+      <datalist id="category-datalist">
+        <option value="Business Tools">
+        <option value="Communication Tools">
+        <option value="Documentation Tools">
+        <option value="Development">
+        <option value="Internet Browsing">
+        <option value="System Tools">
+        <option value="Entertainment">
+        <option value="Utilities">
+        <option value="Social Media">
+        <option value="Graphic Design">
+        <option value="Finance & Accounting">
+        <option value="DevOps & Cloud">
+        <option value="Not Rated">
+      </datalist>
+
+      <datalist id="impact-tag-datalist">
+        <option value="Productive">
+        <option value="Core Work">
+        <option value="No Impact">
+        <option value="Neutral">
+        <option value="Non Productive">
+        <option value="Meeting">
+        <option value="Personal">
+        <option value="Documentation">
+        <option value="Research">
+        <option value="Review">
+        <option value="Break">
+      </datalist>
 
       <!-- VIEW 1: DISTINCT DETECTED APPS & PROCESSES -->
       <div id="section-distinct-apps">
@@ -381,9 +412,9 @@
                 <th style="min-width: 180px;">Tool Display Name</th>
                 <th style="min-width: 140px;">Process Name</th>
                 <th style="min-width: 120px;">Recorded Usage</th>
-                <th style="min-width: 190px;">Category</th>
-                <th style="min-width: 180px;">Productivity Tag / Impact</th>
-                <th style="width: 140px; text-align: center;">Quick Action</th>
+                <th style="min-width: 190px;">Category (Type or Select)</th>
+                <th style="min-width: 190px;">Productivity Tag (Type Anything)</th>
+                <th style="width: 130px; text-align: center;">Action</th>
               </tr>
             </thead>
             <tbody id="distinct-apps-tbody">
@@ -403,8 +434,7 @@
                 <th>Match Type</th>
                 <th>Display Tool Name</th>
                 <th>Category</th>
-                <th>Productivity Impact</th>
-                <th>Rating</th>
+                <th>Productivity Tag</th>
                 <th style="width: 100px;">Actions</th>
               </tr>
             </thead>
@@ -641,22 +671,12 @@
         </div>
         <div class="form-row-2">
           <div class="form-field">
-            <label>Category</label>
-            <select id="rule-category" class="select-glass">
-              <option value="Business Tools">Business Tools</option>
-              <option value="Documentation Tools">Documentation Tools</option>
-              <option value="Communication Tools">Communication Tools</option>
-              <option value="Internet Browsing">Internet Browsing</option>
-              <option value="System Tools">System Tools</option>
-            </select>
+            <label>Category (Type or Select)</label>
+            <input type="text" id="rule-category" list="category-datalist" class="input-glass" placeholder="Type or select category..." value="Business Tools">
           </div>
           <div class="form-field">
-            <label>Productivity Impact</label>
-            <select id="rule-impact" class="select-glass">
-              <option value="Productive">Productive (+2 Rating)</option>
-              <option value="No Impact">Neutral (0 Rating)</option>
-              <option value="Non Productive">Distracting (-2 Rating)</option>
-            </select>
+            <label>Productivity Tag (Type Anything)</label>
+            <input type="text" id="rule-impact" list="impact-tag-datalist" class="input-glass" placeholder="Type tag (e.g. Work, Meeting)..." value="Productive">
           </div>
         </div>
       </div>

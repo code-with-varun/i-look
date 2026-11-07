@@ -1056,8 +1056,8 @@ function initRuleModal() {
       const pattern = document.getElementById('rule-pattern').value.trim();
       const type = document.getElementById('rule-type').value;
       const tool = document.getElementById('rule-tool').value.trim();
-      const category = document.getElementById('rule-category').value;
-      const impact = document.getElementById('rule-impact').value;
+      const category = (document.getElementById('rule-category').value || 'Business Tools').trim();
+      const impact = (document.getElementById('rule-impact').value || 'Productive').trim();
 
       if (!pattern) {
         alert('Please enter a pattern keyword or executable name');
@@ -1065,8 +1065,12 @@ function initRuleModal() {
       }
 
       let rating = 2;
-      if (impact === 'No Impact') rating = 0;
-      else if (impact === 'Non Productive') rating = -2;
+      const impLower = impact.toLowerCase();
+      if (impLower.includes('non') || impLower.includes('distract') || impLower.includes('game') || impLower.includes('social')) {
+        rating = -2;
+      } else if (impLower.includes('neutral') || impLower.includes('no impact') || impLower.includes('not rated') || impLower === '0') {
+        rating = 0;
+      }
 
       const currentRules = (await window.api.getRules()) || [];
       currentRules.push({
@@ -1083,7 +1087,9 @@ function initRuleModal() {
       modal.classList.remove('active');
       document.getElementById('rule-pattern').value = '';
       document.getElementById('rule-tool').value = '';
-      loadRules();
+      await loadRules();
+      await loadDistinctApps();
+      await loadDashboardData();
     });
   }
 }
@@ -1131,12 +1137,58 @@ function initDistinctAppsView() {
   }
 }
 
+function updateDatalists() {
+  const catDatalist = document.getElementById('category-datalist');
+  const tagDatalist = document.getElementById('impact-tag-datalist');
+  if (!catDatalist || !tagDatalist) return;
+
+  const knownCategories = new Set([
+    'Business Tools',
+    'Communication Tools',
+    'Documentation Tools',
+    'Development',
+    'Internet Browsing',
+    'System Tools',
+    'Entertainment',
+    'Utilities',
+    'Social Media',
+    'Graphic Design',
+    'Finance & Accounting',
+    'DevOps & Cloud',
+    'Not Rated'
+  ]);
+
+  const knownTags = new Set([
+    'Productive',
+    'Core Work',
+    'No Impact',
+    'Neutral',
+    'Non Productive',
+    'Meeting',
+    'Personal',
+    'Documentation',
+    'Research',
+    'Review',
+    'Break',
+    'Admin'
+  ]);
+
+  distinctAppsData.forEach(app => {
+    if (app.category && app.category.trim()) knownCategories.add(app.category.trim());
+    if (app.impact && app.impact.trim() && app.impact !== 'UNKNOWN') knownTags.add(app.impact.trim());
+  });
+
+  catDatalist.innerHTML = Array.from(knownCategories).map(c => `<option value="${escapeHtml(c)}">`).join('');
+  tagDatalist.innerHTML = Array.from(knownTags).map(t => `<option value="${escapeHtml(t)}">`).join('');
+}
+
 async function loadDistinctApps() {
   if (!window.api || !window.api.getDistinctApps) return;
   try {
     distinctAppsData = (await window.api.getDistinctApps()) || [];
     const countBadge = document.getElementById('distinct-apps-count');
     if (countBadge) countBadge.textContent = distinctAppsData.length;
+    updateDatalists();
     renderDistinctAppsTable();
   } catch (err) {
     console.error('Error loading distinct apps:', err);
@@ -1152,7 +1204,8 @@ function renderDistinctAppsTable(filterQuery = '') {
     const t = (item.tool || '').toLowerCase();
     const p = (item.process || '').toLowerCase();
     const c = (item.category || '').toLowerCase();
-    return t.includes(filterQuery) || p.includes(filterQuery) || c.includes(filterQuery);
+    const imp = (item.impact || '').toLowerCase();
+    return t.includes(filterQuery) || p.includes(filterQuery) || c.includes(filterQuery) || imp.includes(filterQuery);
   });
 
   if (filtered.length === 0) {
@@ -1170,69 +1223,35 @@ function renderDistinctAppsTable(filterQuery = '') {
     return;
   }
 
-  const CATEGORIES = [
-    'Business Tools',
-    'Communication Tools',
-    'Documentation Tools',
-    'Development',
-    'Internet Browsing',
-    'System Tools',
-    'Entertainment',
-    'Utilities',
-    'Social Media',
-    'Not Rated'
-  ];
-
-  const IMPACTS = [
-    { label: 'Productive (+2)', value: 'Productive', rating: 2 },
-    { label: 'No Impact (0)', value: 'No Impact', rating: 0 },
-    { label: 'Non Productive (-2)', value: 'Non Productive', rating: -2 },
-    { label: 'Not Rated / UNKNOWN (0)', value: 'UNKNOWN', rating: 0 }
-  ];
-
   let html = '';
   filtered.forEach((app) => {
     const procSafe = escapeHtml(app.process || '');
     const toolSafe = escapeHtml(app.tool || '');
-    const catSafe = app.category || 'Not Rated';
-    const impactSafe = app.impact || 'UNKNOWN';
-
-    const catOptions = CATEGORIES.map(c => {
-      const isSel = c.toLowerCase() === catSafe.toLowerCase();
-      return `<option value="${escapeHtml(c)}" ${isSel ? 'selected' : ''}>${escapeHtml(c)}</option>`;
-    }).join('');
-
-    const impactOptions = IMPACTS.map(imp => {
-      const isSel = imp.value.toLowerCase() === impactSafe.toLowerCase() ||
-                    (imp.value === 'UNKNOWN' && (impactSafe === 'Not Rated' || impactSafe === 'UNKNOWN'));
-      return `<option value="${imp.value}" data-rating="${imp.rating}" ${isSel ? 'selected' : ''}>${imp.label}</option>`;
-    }).join('');
+    const catSafe = escapeHtml(app.category || 'Not Rated');
+    const impactRaw = app.impact || 'Productive';
+    const impactSafe = escapeHtml(impactRaw === 'UNKNOWN' ? 'Not Rated' : impactRaw);
 
     html += `
       <tr data-process="${procSafe}">
         <td>
-          <input type="text" class="app-name-input row-tool-name" value="${toolSafe}" placeholder="Tool display name">
+          <input type="text" class="table-inline-input row-tool-name" value="${toolSafe}" placeholder="Tool display name">
         </td>
         <td>
           <span class="process-badge" title="${procSafe}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>
             ${procSafe}
           </span>
-          ${app.isCustomRule ? '<span style="font-size: 10px; color: #10b981; margin-left: 5px; font-weight:700;" title="Saved Custom Classification">● Configured</span>' : ''}
+          ${app.isCustomRule ? '<span class="status-dot-saved" title="Custom Classification Saved">● Saved</span>' : ''}
         </td>
         <td>
-          <strong style="color: #fff; font-size: 12.5px;">${app.durationFormatted || '0s'}</strong>
-          <small style="color: var(--text-dim); display: block; font-size: 11px;">${app.sessionCount} session${app.sessionCount === 1 ? '' : 's'}</small>
+          <strong class="usage-primary-text">${app.durationFormatted || '0s'}</strong>
+          <small class="usage-sub-text">${app.sessionCount} session${app.sessionCount === 1 ? '' : 's'}</small>
         </td>
         <td>
-          <select class="table-select row-category">
-            ${catOptions}
-          </select>
+          <input type="text" list="category-datalist" class="table-inline-input row-category" value="${catSafe}" placeholder="Type or select category...">
         </td>
         <td>
-          <select class="table-select row-impact">
-            ${impactOptions}
-          </select>
+          <input type="text" list="impact-tag-datalist" class="table-inline-input row-impact" value="${impactSafe}" placeholder="Type productivity tag...">
         </td>
         <td style="text-align: center;">
           <button type="button" class="btn-save-app-tag" onclick="saveAppRowClassification('${procSafe}', this)">
@@ -1253,14 +1272,21 @@ window.saveAppRowClassification = async function(processName, btn) {
   if (!tr) return;
 
   const toolInput = tr.querySelector('.row-tool-name');
-  const catSelect = tr.querySelector('.row-category');
-  const impSelect = tr.querySelector('.row-impact');
+  const catInput = tr.querySelector('.row-category');
+  const impInput = tr.querySelector('.row-impact');
 
   const tool = toolInput ? toolInput.value.trim() : processName;
-  const category = catSelect ? catSelect.value : 'Business Tools';
-  const impact = impSelect ? impSelect.value : 'Productive';
-  const selectedOpt = impSelect ? impSelect.options[impSelect.selectedIndex] : null;
-  const rating = selectedOpt ? parseInt(selectedOpt.dataset.rating || '2', 10) : (impact === 'Productive' ? 2 : (impact === 'Non Productive' ? -2 : 0));
+  const category = (catInput && catInput.value.trim()) ? catInput.value.trim() : 'Business Tools';
+  const impact = (impInput && impInput.value.trim()) ? impInput.value.trim() : 'Productive';
+
+  // Calculate rating based on typed impact tag
+  let rating = 2;
+  const impLower = impact.toLowerCase();
+  if (impLower.includes('non') || impLower.includes('distract') || impLower.includes('game') || impLower.includes('social')) {
+    rating = -2;
+  } else if (impLower.includes('neutral') || impLower.includes('no impact') || impLower.includes('not rated') || impLower === '0') {
+    rating = 0;
+  }
 
   btn.textContent = 'Saving...';
   btn.classList.remove('saved');
@@ -1331,8 +1357,7 @@ async function loadRules() {
           <td><span class="category-tag-badge">${escapeHtml(r.matchType || r.type || 'any')}</span></td>
           <td><strong>${escapeHtml(r.tool)}</strong></td>
           <td><span class="category-tag-badge">${escapeHtml(r.category)}</span></td>
-          <td><span class="impact-tag ${r.impact === 'Productive' ? 'productive' : (r.impact === 'Non Productive' ? 'distracting' : 'neutral')}">${escapeHtml(r.impact)}</span></td>
-          <td><strong>${r.rating > 0 ? '+' + r.rating : r.rating}</strong></td>
+          <td><span class="impact-tag productive">${escapeHtml(r.impact)}</span></td>
           <td>
             <button class="btn-glass-secondary" style="padding: 4px 10px; font-size: 11px; color: var(--accent-rose);" onclick="deleteRule('${r.id || idx}')">Delete</button>
           </td>

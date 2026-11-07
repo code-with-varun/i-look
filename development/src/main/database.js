@@ -303,14 +303,25 @@ class Database {
     if (!process && !tool) return { success: false, error: 'Process or tool required' };
     const procKey = (process || tool).trim();
     const friendlyTool = (tool || process).trim();
-    const numRating = rating !== undefined ? Number(rating) : (impact === 'Productive' ? 2 : (impact === 'Non Productive' ? -2 : 0));
+    const cleanCategory = (category || 'Business Tools').trim();
+    const cleanImpact = (impact || 'Productive').trim();
+
+    let numRating = rating !== undefined ? Number(rating) : 0;
+    const impLower = cleanImpact.toLowerCase();
+    if (impLower.includes('non') || impLower.includes('distract') || impLower.includes('game') || impLower.includes('social')) {
+      numRating = -2;
+    } else if (impLower.includes('neutral') || impLower.includes('no impact') || impLower.includes('not rated') || impLower === '0') {
+      numRating = 0;
+    } else {
+      numRating = 2;
+    }
 
     // 1. Update or create rule
     let existingRule = this.rules.find(r => (r.pattern || '').toLowerCase() === procKey.toLowerCase());
     if (existingRule) {
       existingRule.tool = friendlyTool;
-      existingRule.category = category;
-      existingRule.impact = impact;
+      existingRule.category = cleanCategory;
+      existingRule.impact = cleanImpact;
       existingRule.rating = numRating;
     } else {
       existingRule = {
@@ -318,8 +329,8 @@ class Database {
         pattern: procKey,
         type: 'process',
         tool: friendlyTool,
-        category: category,
-        impact: impact,
+        category: cleanCategory,
+        impact: cleanImpact,
         rating: numRating
       };
       this.rules.unshift(existingRule);
@@ -335,8 +346,8 @@ class Database {
       const sp = (s.process_name || '').toLowerCase();
       const st = (s.tool_name || '').toLowerCase();
       if (sp === pLower || st === tLower || sp === tLower || st === pLower) {
-        s.category = category;
-        s.impact = impact;
+        s.category = cleanCategory;
+        s.impact = cleanImpact;
         s.rating = numRating;
         if (friendlyTool) s.tool_name = friendlyTool;
         updatedCount++;
