@@ -27,3 +27,11 @@ yarn-debug.log*
 Thumbs.db
 desktop.ini
 
+# Certificates & Private Keys
+*.pfx
+*.key
+
+# Temporary test files
+test_*.log
+test_*.ps1
+

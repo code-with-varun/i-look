@@ -15,12 +15,17 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 
 public class BulletproofSensor {
     [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)] public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
     [DllImport("user32.dll", SetLastError = true)] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
     [DllImport("user32.dll")] public static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
+    [DllImport("user32.dll", SetLastError = true)] public static extern IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, uint dwDesiredAccess);
+    [DllImport("user32.dll", SetLastError = true)] public static extern bool SetThreadDesktop(IntPtr hDesktop);
+    [DllImport("user32.dll", SetLastError = true)] public static extern bool CloseDesktop(IntPtr hDesktop);
 
     [StructLayout(LayoutKind.Sequential)]
     public struct LASTINPUTINFO {
@@ -43,18 +48,53 @@ public class BulletproofSensor {
         LASTINPUTINFO lii = new LASTINPUTINFO();
         lii.cbSize = (uint)Marshal.SizeOf(lii);
         if (GetLastInputInfo(ref lii)) {
-            idle = ((uint)Environment.TickCount - lii.dwTime) / 1000.0;
+            uint tickCount = (uint)Environment.TickCount;
+            uint diff = tickCount >= lii.dwTime ? (tickCount - lii.dwTime) : ((uint.MaxValue - lii.dwTime) + tickCount);
+            idle = diff / 1000.0;
         }
 
-        if (hwnd != IntPtr.Zero) {
+        if (hwnd == IntPtr.Zero) {
+            Thread t = new Thread(() => {
+                IntPtr hDesk = OpenInputDesktop(0, false, 0x01FF);
+                if (hDesk != IntPtr.Zero) {
+                    SetThreadDesktop(hDesk);
+                }
+                IntPtr fg = GetForegroundWindow();
+                if (fg != IntPtr.Zero) {
+                    hwnd = fg;
+                    StringBuilder sb = new StringBuilder(1024);
+                    GetWindowText(hwnd, sb, 1024);
+                    title = sb.ToString().Trim();
+                    GetWindowThreadProcessId(hwnd, out targetPid);
+                }
+                if (hDesk != IntPtr.Zero) {
+                    CloseDesktop(hDesk);
+                }
+            });
+            t.SetApartmentState(ApartmentState.STA);
+            t.Start();
+            t.Join();
+        }
+
+        if (hwnd != IntPtr.Zero && string.IsNullOrEmpty(title)) {
             StringBuilder sb = new StringBuilder(1024);
             GetWindowText(hwnd, sb, 1024);
             title = sb.ToString().Trim();
+        }
 
+        if (hwnd != IntPtr.Zero && targetPid == 0) {
             GetWindowThreadProcessId(hwnd, out targetPid);
-            if (targetPid != 0) {
+        }
+
+        if (targetPid != 0 && string.IsNullOrEmpty(procName)) {
+            try {
+                procName = Process.GetProcessById((int)targetPid).ProcessName;
+            } catch {
                 try {
-                    procName = Process.GetProcessById((int)targetPid).ProcessName;
+                    procName = Process.GetProcessById((int)targetPid).MainModule.ModuleName;
+                    if (procName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) {
+                        procName = procName.Substring(0, procName.Length - 4);
+                    }
                 } catch {}
             }
         }
@@ -64,7 +104,7 @@ public class BulletproofSensor {
             _lastProc = procName;
             _lastTitle = title;
             _lastPid = targetPid;
-        } else if (!string.IsNullOrEmpty(_lastProc)) {
+        } else if (!string.IsNullOrEmpty(_lastProc) && idle < 30.0) {
             hwnd = _lastHwnd;
             procName = _lastProc;
             title = _lastTitle;
@@ -105,7 +145,9 @@ function Extract-Domain {
 }
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+try { [Console]::Out.AutoFlush = $true } catch {}
 [Console]::WriteLine('{"event":"ready"}')
+try { [Console]::Out.Flush() } catch {}
 
 while ($true) {
     try {
@@ -126,7 +168,10 @@ while ($true) {
         }
         $json = $obj | ConvertTo-Json -Compress
         [Console]::WriteLine($json)
-    } catch {}
+        try { [Console]::Out.Flush() } catch {}
+    } catch {
+        # ignore error
+    }
     Start-Sleep -Milliseconds 1000
 }
 `;

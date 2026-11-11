@@ -111,30 +111,34 @@ function ensureStartupShortcutHidden() {
       : null;
     if (!startupFolder || !fs.existsSync(startupFolder)) return false;
 
-    const { exec } = require('child_process');
-    const ps = `
+    const { execFile } = require('child_process');
+    const script = `
       $wsh = New-Object -ComObject WScript.Shell
-      Get-ChildItem -Path '${startupFolder.replace(/'/g, "''")}' -Filter "*.lnk" -ErrorAction SilentlyContinue | ForEach-Object {
+      Get-ChildItem -Path '${startupFolder.replace(/'/g, "''")}' -Filter '*.lnk' -ErrorAction SilentlyContinue | ForEach-Object {
         $sc = $wsh.CreateShortcut($_.FullName)
-        if ($sc.TargetPath -match "i-Look") {
-          letChanged = $false
-          if ($sc.Arguments -notmatch "--hidden") {
-            $sc.Arguments = "--hidden"
-            letChanged = $true
+        if ($sc.TargetPath -like '*i-Look*') {
+          $changed = $false
+          if ($sc.Arguments -notmatch '--hidden') {
+            $sc.Arguments = '--hidden'
+            $changed = $true
           }
           if ($sc.WindowStyle -ne 7) {
             $sc.WindowStyle = 7
-            letChanged = $true
+            $changed = $true
           }
-          if (letChanged) {
+          if ($changed) {
             $sc.Save()
-            Write-Host "Auto-patched $($_.Name) with --hidden and Minimized window style"
+            Write-Host "Auto-patched $($_.Name) with --hidden"
           }
         }
       }
     `;
-    exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "${ps.replace(/\r?\n/g, ' ')}"`, (err) => {
-      if (err) console.warn('[i-Look] Startup shortcut auto-patch notice:', err.message);
+    execFile('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script], (err, stdout) => {
+      if (err) {
+        console.warn('[i-Look] Startup shortcut notice:', err.message);
+      } else if (stdout && stdout.trim()) {
+        console.log('[i-Look] Startup shortcut:', stdout.trim());
+      }
     });
     return true;
   } catch (e) {
