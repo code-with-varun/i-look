@@ -56,6 +56,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadDistinctApps();
   await loadSettingsAndAppInfo();
 
+  // Immediately request current live tracking state from main process
+  if (window.api && window.api.getCurrentState) {
+    try {
+      const state = await window.api.getCurrentState();
+      if (state && Object.keys(state).length > 0) {
+        currentTrackingState = state;
+        updateLiveState(state);
+        updateLiveTicker(state);
+      }
+    } catch (e) {
+      console.warn('Failed to load initial tracking state:', e);
+    }
+  }
+
   // Watcher Real-Time IPC Listeners
   if (window.api) {
     window.api.onWatcherTick((state) => {

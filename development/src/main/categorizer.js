@@ -108,17 +108,33 @@ class Categorizer {
   }
 
   matchesRule(rule, { proc, ttl, dom, u }) {
-    const rx = typeof rule.match === 'string' ? new RegExp(rule.match, 'i') : rule.match;
-    if (rule.type === 'process') {
+    if (!rule) return false;
+    const pattern = rule.pattern || rule.match;
+    if (!pattern) return false;
+
+    let rx;
+    if (pattern instanceof RegExp) {
+      rx = pattern;
+    } else {
+      try {
+        rx = new RegExp(pattern, 'i');
+      } catch (e) {
+        const escaped = pattern.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        rx = new RegExp(escaped, 'i');
+      }
+    }
+
+    const type = (rule.type || 'any').toLowerCase();
+    if (type === 'process') {
       return rx.test(proc);
     }
-    if (rule.type === 'domain') {
+    if (type === 'domain') {
       return rx.test(dom) || rx.test(u);
     }
-    if (rule.type === 'title') {
+    if (type === 'title') {
       return rx.test(ttl);
     }
-    // 'any'
+    // 'any' or fallback
     return rx.test(proc) || rx.test(ttl) || rx.test(dom) || rx.test(u);
   }
 

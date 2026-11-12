@@ -63,7 +63,9 @@ class WatcherService extends EventEmitter {
             try {
               const sample = JSON.parse(trimmed);
               this.handleSample(sample);
-            } catch (err) {}
+            } catch (err) {
+              console.error('[WatcherService] Error handling sample:', err);
+            }
           }
         }
       });
@@ -114,121 +116,130 @@ class WatcherService extends EventEmitter {
   }
 
   handleSample(sample) {
-    if (sample.event === 'ready') {
-      console.log('[WatcherService] Sensor reported ready');
-      return;
-    }
+    try {
+      if (sample.event === 'ready') {
+        console.log('[WatcherService] Sensor reported ready');
+        return;
+      }
 
-    this.lastSampleTime = Date.now();
-    if (this.isPaused) {
-      return;
-    }
+      this.lastSampleTime = Date.now();
+      if (this.isPaused) {
+        return;
+      }
 
-    const now = new Date();
-    const nowEpoch = now.getTime();
-    const formattedNow = this.db.formatDate(now);
-    const idleThreshold = (this.db.settings && this.db.settings.idleThresholdSeconds) || 180;
+      const now = new Date();
+      const nowEpoch = now.getTime();
+      const formattedNow = this.db.formatDate(now);
+      const idleThreshold = (this.db.settings && this.db.settings.idleThresholdSeconds) || 180;
 
-    const sampleIdle = sample.idleSeconds || 0;
-    const isUserIdle = sampleIdle >= idleThreshold;
+      const sampleIdle = sample.idleSeconds || 0;
+      const isUserIdle = sampleIdle >= idleThreshold;
 
-    // Handle Idle Transition
-    if (isUserIdle && !this.isIdle) {
-      this.isIdle = true;
-      this.closeCurrentSession(formattedNow, nowEpoch);
+      // Handle Idle Transition
+      if (isUserIdle && !this.isIdle) {
+        this.isIdle = true;
+        this.closeCurrentSession(formattedNow, nowEpoch);
 
-      this.currentSession = {
-        id: 'idle_' + nowEpoch,
-        date: formattedNow.split(' ')[0],
-        tool_name: 'Idle Time',
-        process_name: 'System Idle',
-        window_title: 'System Inactivity (> ' + Math.round(idleThreshold / 60) + ' mins)',
-        url: '',
-        domain: '',
-        category: 'Idle Time',
-        impact: 'Idle Time',
-        rating: 0,
-        activity_type: 'IDLE',
-        start_time: formattedNow,
-        start_epoch: nowEpoch,
-        end_time: formattedNow,
-        end_epoch: nowEpoch,
-        duration_seconds: 1,
-        duration_formatted: '00:00:01'
-      };
+        this.currentSession = {
+          id: 'idle_' + nowEpoch,
+          date: formattedNow.split(' ')[0],
+          tool_name: 'Idle Time',
+          process_name: 'System Idle',
+          window_title: 'System Inactivity (> ' + Math.round(idleThreshold / 60) + ' mins)',
+          url: '',
+          domain: '',
+          category: 'Idle Time',
+          impact: 'Idle Time',
+          rating: 0,
+          activity_type: 'IDLE',
+          start_time: formattedNow,
+          start_epoch: nowEpoch,
+          end_time: formattedNow,
+          end_epoch: nowEpoch,
+          duration_seconds: 1,
+          duration_formatted: '00:00:01'
+        };
 
-      this.db.upsertActiveSession(this.currentSession);
-      this.emit('state-change', this.getCurrentState());
-      return;
-    } else if (!isUserIdle && this.isIdle) {
-      this.isIdle = false;
-      this.closeCurrentSession(formattedNow, nowEpoch);
-    }
+        this.db.upsertActiveSession(this.currentSession);
+        this.emit('state-change', this.getCurrentState());
+        return;
+      } else if (!isUserIdle && this.isIdle) {
+        this.isIdle = false;
+        this.closeCurrentSession(formattedNow, nowEpoch);
+      }
 
-    if (this.isIdle) {
-      this.updateOngoingSession(formattedNow, nowEpoch);
-      this.emit('tick', this.getCurrentState());
-      return;
-    }
+      if (this.isIdle) {
+        this.updateOngoingSession(formattedNow, nowEpoch);
+        this.emit('tick', this.getCurrentState());
+        return;
+      }
 
-    // Active foreground window
-    const processName = (sample.process || '').trim();
-    const windowTitle = (sample.title || '').trim();
-    const url = (sample.url || '').trim();
-    const domain = (sample.domain || '').trim();
+      // Active foreground window
+      let processName = (sample.process || '').trim();
+      let windowTitle = (sample.title || '').trim();
+      const url = (sample.url || '').trim();
+      const domain = (sample.domain || '').trim();
 
-    // If no process detected yet, wait for next sample
-    if (!processName && !this.currentSession) {
-      return;
-    }
+      // If no process name detected but window title exists, infer from title
+      if (!processName && windowTitle) {
+        processName = 'Active Window';
+      }
 
-    const hasChanged = !this.currentSession ||
-      this.currentSession.activity_type !== 'TOS' ||
-      (processName && this.currentSession.process_name !== processName) ||
-      (windowTitle && this.currentSession.window_title !== windowTitle) ||
-      (url && this.currentSession.url !== url);
+      // If no process detected yet, wait for next sample
+      if (!processName && !this.currentSession) {
+        return;
+      }
 
-    if (hasChanged && processName) {
-      // Close previous session
-      this.closeCurrentSession(formattedNow, nowEpoch);
+      const hasChanged = !this.currentSession ||
+        this.currentSession.activity_type !== 'TOS' ||
+        (processName && this.currentSession.process_name !== processName) ||
+        (windowTitle && this.currentSession.window_title !== windowTitle) ||
+        (url && this.currentSession.url !== url);
 
-      // Classify the new activity
-      const classification = this.categorizer.classify({
-        process: processName,
-        title: windowTitle,
-        url,
-        domain
-      });
+      if (hasChanged && processName) {
+        // Close previous session
+        this.closeCurrentSession(formattedNow, nowEpoch);
 
-      // Start new session
-      this.currentSession = {
-        id: 'sess_' + nowEpoch + '_' + Math.floor(Math.random() * 1000),
-        date: formattedNow.split(' ')[0],
-        tool_name: classification.tool,
-        process_name: processName,
-        process_path: sample.path || '',
-        window_title: windowTitle || classification.tool,
-        url: url,
-        domain: domain,
-        category: classification.category,
-        impact: classification.impact,
-        rating: classification.rating,
-        activity_type: 'TOS',
-        start_time: formattedNow,
-        start_epoch: nowEpoch,
-        end_time: formattedNow,
-        end_epoch: nowEpoch,
-        duration_seconds: 1,
-        duration_formatted: '00:00:01'
-      };
+        // Classify the new activity
+        const classification = this.categorizer.classify({
+          process: processName,
+          title: windowTitle,
+          url,
+          domain
+        });
 
-      // Immediately save a 1-second record so tables & dashboards display it immediately
-      this.db.upsertActiveSession(this.currentSession);
-      this.emit('state-change', this.getCurrentState());
-    } else if (this.currentSession) {
-      // Same session continues: update duration live
-      this.updateOngoingSession(formattedNow, nowEpoch);
-      this.emit('tick', this.getCurrentState());
+        // Start new session
+        this.currentSession = {
+          id: 'sess_' + nowEpoch + '_' + Math.floor(Math.random() * 1000),
+          date: formattedNow.split(' ')[0],
+          tool_name: classification.tool,
+          process_name: processName,
+          process_path: sample.path || '',
+          window_title: windowTitle || classification.tool,
+          url: url,
+          domain: domain,
+          category: classification.category,
+          impact: classification.impact,
+          rating: classification.rating,
+          activity_type: 'TOS',
+          start_time: formattedNow,
+          start_epoch: nowEpoch,
+          end_time: formattedNow,
+          end_epoch: nowEpoch,
+          duration_seconds: 1,
+          duration_formatted: '00:00:01'
+        };
+
+        // Immediately save a 1-second record so tables & dashboards display it immediately
+        this.db.upsertActiveSession(this.currentSession);
+        this.emit('state-change', this.getCurrentState());
+      } else if (this.currentSession) {
+        // Same session continues: update duration live
+        this.updateOngoingSession(formattedNow, nowEpoch);
+        this.emit('tick', this.getCurrentState());
+      }
+    } catch (err) {
+      console.error('[WatcherService] Sample processing exception:', err);
     }
   }
 
